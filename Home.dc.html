@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Manrope', system-ui, sans-serif; background: #610a03; color: #ffffff; -webkit-font-smoothing: antialiased; }
+  a { color: #d8b563; text-decoration: none; }
+  a:hover { color: #ecc97a; }
+  ::selection { background: #c9a24b; color: #610a03; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes filmFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  #reelRow::-webkit-scrollbar { display: none; }
+  .photo-slot.is-expanded { border-radius: 0; z-index: 5; box-shadow: none; }
+  .why-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+  @media (max-width: 900px) { .why-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 560px) { .why-grid { grid-template-columns: 1fr; } }
+  /* Our Journey timeline */
+  .jr-pin { position: relative; height: 100vh; display: flex; align-items: center; overflow: hidden; }
+  .jr-track { display: flex; align-items: center; padding: 0 8vw; position: relative; }
+  .jr-line { position: absolute; left: 8vw; right: 8vw; top: 50%; height: 3px; transform: translateY(-50%); background: rgba(242,212,136,0.2); border-radius: 3px; z-index: 1; }
+  .jr-fill { position: absolute; inset: 0; background: linear-gradient(90deg,#c9a24b,#f2d488); border-radius: 3px; transform: scaleX(0); transform-origin: left center; box-shadow: 0 0 18px rgba(242,212,136,0.5); }
+  .jr-item { position: relative; flex: 0 0 clamp(300px,40vw,440px); height: min(66vh,560px); }
+  .jr-dot { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 20px; height: 20px; border-radius: 50%; background: #f2d488; border: 3px solid #4a0802; box-shadow: 0 0 0 6px rgba(242,212,136,0.16), 0 0 22px rgba(242,212,136,0.6); z-index: 4; }
+  .jr-conn { position: absolute; left: 50%; width: 2px; transform: translateX(-50%); background: linear-gradient(rgba(242,212,136,0.7),rgba(242,212,136,0.15)); z-index: 2; }
+  .jr-item:nth-child(odd) .jr-conn { bottom: calc(50% + 10px); height: 34px; }
+  .jr-item:nth-child(even) .jr-conn { top: calc(50% + 10px); height: 34px; background: linear-gradient(rgba(242,212,136,0.15),rgba(242,212,136,0.7)); }
+  .jr-content { position: absolute; left: 50%; transform: translateX(-50%); width: min(90%,340px); z-index: 3; }
+  .jr-item:nth-child(odd) .jr-content { bottom: calc(50% + 44px); }
+  .jr-item:nth-child(even) .jr-content { top: calc(50% + 44px); }
+  .jr-card { position: relative; background: linear-gradient(160deg,rgba(97,10,3,0.66),rgba(30,4,2,0.72)); border: 1px solid rgba(242,212,136,0.28); border-radius: 18px; padding: 26px 24px 24px; box-shadow: 0 24px 55px rgba(0,0,0,0.5); backdrop-filter: blur(6px); overflow: hidden; }
+  .jr-index { position: absolute; top: -6px; right: 8px; font-size: 72px; font-weight: 800; line-height: 1; color: rgba(242,212,136,0.1); letter-spacing: -3px; pointer-events: none; }
+  .jr-chip { display: inline-block; font-size: 11px; letter-spacing: 2px; font-weight: 700; color: #f2d488; background: rgba(242,212,136,0.12); border: 1px solid rgba(242,212,136,0.3); border-radius: 999px; padding: 5px 12px; }
+  .jr-year { color: #ffffff; font-weight: 800; font-size: clamp(28px,3vw,40px); letter-spacing: -1px; margin-top: 14px; line-height: 1; }
+  .jr-title { color: #f2d488; font-weight: 700; font-size: 15px; letter-spacing: 0.3px; margin-top: 10px; }
+  .jr-desc { color: rgba(255,255,255,0.78); font-size: 14px; line-height: 1.55; margin-top: 8px; text-wrap: pretty; }
+  @media (max-width: 820px) {
+    .jr-pin { height: auto; display: block; overflow: visible; padding: 4px 0; }
+    .jr-track { flex-direction: column; padding: 0; transform: none !important; align-items: stretch; gap: 22px; }
+    .jr-line { left: 21px; right: auto; top: 8px; bottom: 8px; width: 3px; height: auto; transform: none; }
+    .jr-fill { transform: scaleY(0); transform-origin: top center; background: linear-gradient(180deg,#c9a24b,#f2d488); }
+    .jr-item { flex: none; height: auto; min-height: 0; padding: 0 4px 0 52px; }
+    .jr-dot { left: 21px; top: 30px; transform: translate(-50%,0); }
+    .jr-conn, .jr-item:nth-child(odd) .jr-conn, .jr-item:nth-child(even) .jr-conn { display: none; }
+    .jr-content, .jr-item:nth-child(odd) .jr-content, .jr-item:nth-child(even) .jr-content { position: static; transform: none; width: auto; top: auto; bottom: auto; }
+  }
+  .bento { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-auto-rows:clamp(150px,15.5vw,205px); gap:16px; grid-auto-flow:dense; }
+  .b-2c { grid-column:span 2; }
+  .b-2r { grid-row:span 2; }
+  @media (max-width:820px) {
+    .bento { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-rows:clamp(150px,40vw,220px); }
+    .b-2c { grid-column:span 2; }
+    .b-2r { grid-row:span 1; }
+  }
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="background:#610a03;overflow-x:clip;">
+
+  <!-- SVG MOTIF DEFS (marigold + mango leaf) -->
+  <svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true">
+    <defs>
+      <radialGradient id="mgO" cx="50%" cy="42%" r="62%">
+        <stop offset="0%" stop-color="#f7cd63"></stop>
+        <stop offset="52%" stop-color="#e6a52e"></stop>
+        <stop offset="100%" stop-color="#bd781c"></stop>
+      </radialGradient>
+      <linearGradient id="leafG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#5aa64d"></stop>
+        <stop offset="100%" stop-color="#22591f"></stop>
+      </linearGradient>
+      <symbol id="marigold" viewBox="0 0 60 60">
+        <g fill="url(#mgO)">
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(0 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(30 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(60 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(90 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(120 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(150 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(180 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(210 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(240 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(270 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(300 30 30)"></ellipse>
+          <ellipse cx="30" cy="8" rx="6" ry="12" transform="rotate(330 30 30)"></ellipse>
+        </g>
+        <g fill="#f4bd44">
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(18 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(54 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(90 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(126 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(162 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(198 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(234 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(270 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(306 30 30)"></ellipse>
+          <ellipse cx="30" cy="15" rx="4.5" ry="8.5" transform="rotate(342 30 30)"></ellipse>
+        </g>
+        <circle cx="30" cy="30" r="6" fill="#b56a1e"></circle>
+        <circle cx="30" cy="30" r="2.6" fill="#89500f"></circle>
+      </symbol>
+      <symbol id="mangoleaf" viewBox="0 0 40 70">
+        <path d="M20 2 C 4 20, 4 46, 20 68 C 36 46, 36 20, 20 2 Z" fill="url(#leafG)"></path>
+        <path d="M20 7 L20 62" stroke="#1c4a1a" stroke-width="1.3" fill="none"></path>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- NAV -->
+  <header style="position:fixed;top:40px;left:clamp(16px,4vw,48px);right:clamp(16px,4vw,48px);z-index:50;display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 24px;background:rgba(74,8,2,0.34);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border:1px solid rgba(255,255,255,0.18);border-radius:999px;box-shadow:0 18px 50px rgba(20,3,7,0.4);">
+    <a href="Home.dc.html" style="display:flex;align-items:center;">
+      <img src="assets/logo-vinayaka.png" alt="Vinayaka Jewellers" style="height:40px;width:auto;display:block;">
+    </a>
+    <nav style="display:flex;align-items:center;gap:clamp(14px,2.5vw,34px);">
+      <a href="Home.dc.html" style="color:#fff;font-size:14px;font-weight:600;letter-spacing:0.5px;">Home</a>
+      <a href="Gallery.dc.html" style="color:rgba(255,255,255,0.72);font-size:14px;font-weight:500;letter-spacing:0.5px;">Gallery</a>
+    </nav>
+  </header>
+
+  <!-- 1. HERO — interactive scrolling photo row -->
+  <section id="hero" style="position:relative;height:100vh;min-height:560px;background:#7E332C;overflow:hidden;">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;overflow:hidden;">
+      <div class="photo-track" style="display:flex;flex-wrap:nowrap;will-change:transform;">
+        <div class="photo-card" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-1.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-2.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-3.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-4.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-5.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" aria-hidden="true" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-1.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" aria-hidden="true" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-2.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" aria-hidden="true" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-3.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" aria-hidden="true" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-4.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+        <div class="photo-card" aria-hidden="true" style="position:relative;flex:0 0 365px;width:365px;height:536px;margin-right:60px;"><div class="photo-slot" style="position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#4a0802;box-shadow:0 30px 60px rgba(0,0,0,0.45);"><img src="assets/hero-5.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;top:50%;bottom:0;background:linear-gradient(180deg,rgba(126,51,44,0) 0%,#610A03 100%);pointer-events:none;"></div></div></div>
+      </div>
+    </div>
+    <!-- centered hero copy, bottom-middle -->
+    <div style="position:absolute;left:0;right:0;bottom:60px;z-index:6;text-align:center;padding:0 clamp(20px,5vw,64px);pointer-events:none;">
+      <div style="display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:4px;color:#f7e6b8;font-weight:700;margin-bottom:20px;padding:8px 16px;background:rgba(20,3,7,0.4);border:1px solid rgba(242,212,136,0.45);border-radius:999px;"><span style="width:6px;height:6px;border-radius:50%;background:#f2d488;"></span>CHIKKAMAGALURU · SINCE 1992</div>
+      <h1 style="font-size:clamp(32px,5vw,58px);font-weight:800;line-height:1.05;letter-spacing:-1px;max-width:820px;margin:0 auto;text-shadow:0 4px 30px rgba(20,3,7,0.6);">Celebrating Traditions Since Generations</h1>
+      <p style="margin:18px auto 0;font-size:clamp(15px,1.6vw,19px);color:rgba(255,255,255,0.88);max-width:540px;line-height:1.5;text-shadow:0 2px 16px rgba(20,3,7,0.7);">South India's finest temple, antique &amp; bridal jewellery — hallmarked gold, made to be passed down.</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:30px;pointer-events:auto;">
+        <a href="Gallery.dc.html" style="background:#fff;color:#610a03;font-weight:700;font-size:15px;padding:15px 28px;border-radius:999px;box-shadow:0 12px 30px rgba(0,0,0,0.35);">Explore Collections</a>
+        <a href="#schemes" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);color:#fff;font-weight:600;font-size:15px;padding:15px 28px;border-radius:999px;border:1px solid rgba(255,255,255,0.45);">Start Gold Saving</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- BRAND FILM (video right, content left) -->
+  <section id="film" style="background:#ffffff;color:#211812;padding:clamp(48px,7vw,96px) clamp(20px,5vw,64px);overflow:hidden;">
+    <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(32px,5vw,68px);align-items:center;">
+      <div data-reveal style="opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);">
+        <span style="display:inline-block;width:44px;height:3px;background:#a67c2b;border-radius:2px;margin-bottom:18px;"></span>
+        <div style="font-size:12px;letter-spacing:4px;color:#a67c2b;font-weight:600;margin-bottom:12px;">OUR STORY IN MOTION</div>
+        <h2 style="font-size:clamp(26px,3.4vw,42px);font-weight:800;letter-spacing:-0.5px;line-height:1.12;color:#211812;">Where every ornament tells a story.</h2>
+        <p style="margin-top:20px;font-size:17px;color:rgba(33,24,18,0.66);line-height:1.6;max-width:480px;">Step behind the counter and into three decades of craftsmanship — from the first sketch to the final polish, watch how Vinayaka jewellery comes to life.</p>
+        <a href="#visit" style="display:inline-flex;align-items:center;gap:10px;margin-top:30px;background:#fff;color:#610a03;font-weight:700;font-size:15px;padding:15px 28px;border-radius:999px;">Book a Showroom Visit</a>
+      </div>
+      <div data-reveal style="opacity:0;transform:translateY(30px) scale(0.98);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);">
+        <div style="position:relative;border-radius:22px;overflow:hidden;border:1px solid rgba(201,162,75,0.35);box-shadow:0 30px 70px rgba(0,0,0,0.45);aspect-ratio:9/13;max-height:560px;margin:0 auto;animation:filmFloat 7s ease-in-out infinite;">
+          <div style="position:absolute;inset:0;"><image-slot id="film-poster" shape="rect" fit="cover" src="https://images.unsplash.com/photo-1742891603547-950f510710d7?q=80&w=1000&auto=format&fit=crop" credit="Rohit Dey" credit-href="https://unsplash.com/@rohit16dey" placeholder="Brand film"></image-slot></div>
+          <video id="filmVideo" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .5s ease;">
+            <source src="assets/brand-film.mp4" type="video/mp4">
+          </video>
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,4,10,0.15) 0%,transparent 40%,rgba(20,4,10,0.6) 100%);pointer-events:none;"></div>
+          <div data-film-play style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:#610a03;font-size:26px;padding-left:5px;box-shadow:0 10px 30px rgba(0,0,0,0.4);pointer-events:none;">▶</div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. GOLD SAVING SCHEMES (pinned, scroll-driven) -->
+  <section id="schemes" style="background:#4a0802;">
+    <div class="sch-scroll" style="position:relative;height:300vh;">
+      <div class="sch-sticky" style="position:sticky;top:0;min-height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden;">
+    <div style="max-width:1100px;margin:0 auto;padding:clamp(28px,4vh,56px) clamp(20px,5vw,64px) 0;">
+      <div data-reveal style="opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);text-align:center;max-width:680px;margin:0 auto;">
+        <div style="font-size:12px;letter-spacing:4px;color:#c9a24b;font-weight:600;margin-bottom:16px;">GOLD SAVING SCHEMES</div>
+        <h2 style="font-size:clamp(28px,3.6vw,46px);font-weight:800;letter-spacing:-0.5px;line-height:1.1;">Three ways to own more gold.</h2>
+        <p style="margin-top:18px;font-size:16px;color:rgba(255,255,255,0.66);line-height:1.6;">Scroll to move through each plan — or tap a tab to jump straight to one.</p>
+      </div>
+    </div>
+
+    <!-- AUTO-ROTATING SCHEME CAROUSEL -->
+    <div style="position:relative;">
+      <div style="display:flex;flex-direction:column;gap:clamp(24px,3.5vh,40px);padding:clamp(32px,5vh,56px) clamp(20px,5vw,64px) clamp(48px,6vw,80px);">
+
+        <!-- TICKING TABS -->
+        <div ref="{{ schemeTabsRef }}" style="width:100%;max-width:760px;margin:0 auto;">
+          <div style="position:relative;display:flex;gap:4px;background:rgba(15,3,8,0.9);backdrop-filter:blur(12px);border:1px solid rgba(201,162,75,0.24);border-radius:999px;padding:6px;">
+            <div data-tab-hl style="position:absolute;top:6px;bottom:6px;left:0;width:0;border-radius:999px;background:rgba(201,162,75,0.16);border:1px solid rgba(201,162,75,0.55);transition:transform .45s cubic-bezier(.16,1,.3,1),width .45s cubic-bezier(.16,1,.3,1);pointer-events:none;"></div>
+            <button data-tab="0" style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;border:none;cursor:pointer;font-family:inherit;padding:11px 10px;border-radius:999px;color:rgba(255,255,255,0.6);font-size:clamp(12px,1.4vw,14px);font-weight:700;letter-spacing:0.3px;transition:color .35s ease;">
+              <span data-tick style="width:22px;height:22px;flex-shrink:0;border-radius:50%;border:2px solid rgba(201,162,75,0.5);display:flex;align-items:center;justify-content:center;transition:background .4s ease,border-color .4s ease;"><svg width="11" height="11" viewBox="0 0 12 12"><path data-check d="M2 6.4 L5 9.4 L10 3" fill="none" stroke="#610a03" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="15" stroke-dashoffset="15" style="transition:stroke-dashoffset .5s ease .12s;"></path></svg></span>
+              <span>Kuber</span>
+            </button>
+            <button data-tab="1" style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;border:none;cursor:pointer;font-family:inherit;padding:11px 10px;border-radius:999px;color:rgba(255,255,255,0.6);font-size:clamp(12px,1.4vw,14px);font-weight:700;letter-spacing:0.3px;transition:color .35s ease;">
+              <span data-tick style="width:22px;height:22px;flex-shrink:0;border-radius:50%;border:2px solid rgba(201,162,75,0.5);display:flex;align-items:center;justify-content:center;transition:background .4s ease,border-color .4s ease;"><svg width="11" height="11" viewBox="0 0 12 12"><path data-check d="M2 6.4 L5 9.4 L10 3" fill="none" stroke="#610a03" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="15" stroke-dashoffset="15" style="transition:stroke-dashoffset .5s ease .12s;"></path></svg></span>
+              <span>Samruddhi</span>
+            </button>
+            <button data-tab="2" style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;border:none;cursor:pointer;font-family:inherit;padding:11px 10px;border-radius:999px;color:rgba(255,255,255,0.6);font-size:clamp(12px,1.4vw,14px);font-weight:700;letter-spacing:0.3px;transition:color .35s ease;">
+              <span data-tick style="width:22px;height:22px;flex-shrink:0;border-radius:50%;border:2px solid rgba(201,162,75,0.5);display:flex;align-items:center;justify-content:center;transition:background .4s ease,border-color .4s ease;"><svg width="11" height="11" viewBox="0 0 12 12"><path data-check d="M2 6.4 L5 9.4 L10 3" fill="none" stroke="#610a03" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="15" stroke-dashoffset="15" style="transition:stroke-dashoffset .5s ease .12s;"></path></svg></span>
+              <span>JAR · ₹100</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- CROSSFADING STAGE -->
+        <div ref="{{ schemeStageRef }}" style="position:relative;width:100%;max-width:1100px;margin:0 auto;height:clamp(430px,58vh,540px);">
+          <div data-panel="0" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(28px,4vw,56px);align-items:center;opacity:1;transform:none;transition:opacity .55s ease,transform .55s cubic-bezier(.16,1,.3,1);">
+            <div>
+              <div style="font-size:12px;letter-spacing:3px;color:#c9a24b;font-weight:700;">01 · KUBER BONUS MONTH</div>
+              <h3 style="margin-top:12px;font-size:clamp(22px,3vw,38px);font-weight:800;letter-spacing:-0.5px;line-height:1.12;">Pay eleven months, gift yourself the twelfth.</h3>
+              <p style="margin-top:16px;font-size:15px;color:rgba(255,255,255,0.74);line-height:1.6;max-width:520px;">Contribute a fixed amount for eleven months and Vinayaka adds the final month as a bonus — a full month of gold, on the house. Redeem the accumulated value against any jewellery in-store.</p>
+              <ul style="list-style:none;margin:20px 0 0;display:flex;flex-direction:column;gap:10px;">
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> 11 monthly instalments — 12th month free</li>
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> Bonus credited at maturity</li>
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> Redeem against any jewellery</li>
+              </ul>
+              <a href="#visit" style="display:inline-block;margin-top:24px;background:#fff;color:#610a03;font-weight:700;font-size:15px;padding:13px 26px;border-radius:999px;">Enquire at Store</a>
+            </div>
+            <div style="position:relative;height:clamp(240px,42vh,460px);border-radius:20px;overflow:hidden;border:1px solid rgba(201,162,75,0.2);">
+              <image-slot id="scheme-kuber" shape="rect" fit="cover" src="https://images.unsplash.com/flagged/photo-1551854716-8b811be39e7e?q=80&w=1400&auto=format&fit=crop" credit="Bella Pon Fruitsia" credit-href="https://unsplash.com/@bfruitsia" placeholder="Kuber scheme imagery"></image-slot>
+            </div>
+          </div>
+
+          <div data-panel="1" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(28px,4vw,56px);align-items:center;opacity:0;transform:translateY(24px);pointer-events:none;transition:opacity .55s ease,transform .55s cubic-bezier(.16,1,.3,1);">
+            <div>
+              <div style="font-size:12px;letter-spacing:3px;color:#c9a24b;font-weight:700;">02 · SAMRUDDHI GOLD WEIGHT SAVING</div>
+              <h3 style="margin-top:12px;font-size:clamp(22px,3vw,38px);font-weight:800;letter-spacing:-0.5px;line-height:1.12;">Save in weight, not just rupees.</h3>
+              <p style="margin-top:16px;font-size:15px;color:rgba(255,255,255,0.74);line-height:1.6;max-width:520px;">Save a fixed amount every month, accumulate gold weight at your own pace, and enjoy up to <span style="color:#d8b563;font-weight:700;">14% benefit on making charges</span> when you buy. A disciplined, transparent path to the jewellery you've been dreaming of.</p>
+              <ul style="list-style:none;margin:20px 0 0;display:flex;flex-direction:column;gap:10px;">
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> Flexible monthly contributions</li>
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> Gold weight accumulated in your name</li>
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> Up to 14% making-charge advantage</li>
+              </ul>
+              <a href="#zeltgold" style="display:inline-block;margin-top:24px;background:#fff;color:#610a03;font-weight:700;font-size:15px;padding:13px 26px;border-radius:999px;">Join through Zeltgold</a>
+            </div>
+            <div style="position:relative;height:clamp(240px,42vh,460px);border-radius:20px;overflow:hidden;border:1px solid rgba(201,162,75,0.2);">
+              <image-slot id="home-scheme" shape="rect" fit="cover" src="https://images.unsplash.com/photo-1688382654723-a7366006519b?q=80&w=1400&auto=format&fit=crop" credit="Ardy Arjun" credit-href="https://unsplash.com/@ardyastic" placeholder="Gold coins / savings imagery"></image-slot>
+            </div>
+          </div>
+
+          <div data-panel="2" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(28px,4vw,56px);align-items:center;opacity:0;transform:translateY(24px);pointer-events:none;transition:opacity .55s ease,transform .55s cubic-bezier(.16,1,.3,1);">
+            <div>
+              <div style="font-size:12px;letter-spacing:3px;color:#c9a24b;font-weight:700;">03 · JAR SAVING · POWERED BY ZELTGOLD</div>
+              <h3 style="margin-top:12px;font-size:clamp(22px,3vw,38px);font-weight:800;letter-spacing:-0.5px;line-height:1.12;">Start your gold jar from just ₹100.</h3>
+              <p style="margin-top:16px;font-size:15px;color:rgba(255,255,255,0.74);line-height:1.6;max-width:520px;">Save digitally through our Zeltgold partnership, watch your gold weight grow with every small contribution, and redeem it as real jewellery in-store whenever you're ready.</p>
+              <ul style="list-style:none;margin:20px 0 0;display:flex;flex-direction:column;gap:10px;">
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> Start from as little as ₹100</li>
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> 100% digital, join in minutes</li>
+                <li style="display:flex;gap:12px;align-items:center;font-size:14px;color:rgba(255,255,255,0.85);"><span style="color:#c9a24b;">◆</span> Redeem in-store as jewellery</li>
+              </ul>
+              <a href="#zeltgold" style="display:inline-block;margin-top:24px;background:#fff;color:#610a03;font-weight:700;font-size:15px;padding:13px 26px;border-radius:999px;">Start on Zeltgold</a>
+            </div>
+            <div style="position:relative;height:clamp(240px,42vh,460px);border-radius:20px;overflow:hidden;border:1px solid rgba(201,162,75,0.2);">
+              <image-slot id="scheme-jar" shape="rect" fit="cover" src="https://images.unsplash.com/flagged/photo-1570055349452-29232699cc63?q=80&w=1400&auto=format&fit=crop" credit="AMISH THAKKAR" credit-href="https://unsplash.com/@amishthakkar" placeholder="JAR digital saving imagery"></image-slot>
+            </div>
+          </div>
+        </div>
+
+        <!-- progress dots -->
+        <div style="display:flex;justify-content:center;gap:8px;">
+          <span data-prog="0" style="width:26px;height:4px;border-radius:999px;background:#c9a24b;transition:background .4s ease;"></span>
+          <span data-prog="1" style="width:26px;height:4px;border-radius:999px;background:rgba(201,162,75,0.25);transition:background .4s ease;"></span>
+          <span data-prog="2" style="width:26px;height:4px;border-radius:999px;background:rgba(201,162,75,0.25);transition:background .4s ease;"></span>
+        </div>
+      </div>
+    </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. ZELTGOLD PARTNERSHIP (white) -->
+  <section id="zeltgold" style="background:#ffffff;color:#610a03;padding:clamp(56px,8vw,104px) clamp(20px,5vw,64px);overflow:hidden;">
+    <div style="max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(40px,5vw,72px);align-items:center;">
+      <div data-reveal style="opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);">
+        <div data-rc style="display:inline-flex;align-items:center;gap:10px;font-size:12px;letter-spacing:3px;color:#a67c2b;font-weight:600;margin-bottom:22px;padding:8px 16px;border:1px solid rgba(166,124,43,0.32);border-radius:999px;opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);">POWERED BY ZELTGOLD</div>
+        <h2 data-rc style="font-size:clamp(26px,3.4vw,42px);font-weight:800;letter-spacing:-0.5px;line-height:1.12;color:#211812;opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);">Digital gold savings, backed by a shop you can walk into.</h2>
+        <p data-rc style="margin-top:22px;font-size:17px;color:rgba(33,24,18,0.68);line-height:1.6;max-width:520px;opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);">As part of the Zeltgold family, Vinayaka partners with Zeltgold so you can save, track, and grow your gold digitally — starting from just ₹100 — then redeem it as real jewellery, in-store, whenever you're ready.</p>
+        <div data-rc style="display:flex;flex-wrap:wrap;gap:14px;margin-top:34px;opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);">
+          <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:#610a03;color:#fff;font-weight:600;font-size:14px;padding:14px 24px;border-radius:12px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;" style-hover="transform:translateY(-3px);box-shadow:0 14px 30px rgba(97,10,3,0.35);">▶ Play Store</a>
+          <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:#610a03;color:#fff;font-weight:600;font-size:14px;padding:14px 24px;border-radius:12px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;" style-hover="transform:translateY(-3px);box-shadow:0 14px 30px rgba(97,10,3,0.35);"> App Store</a>
+        </div>
+      </div>
+      <div data-reveal style="display:flex;justify-content:center;opacity:0;transform:translateY(30px) scale(0.96);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);">
+        <img src="assets/zeltgold-app.png" alt="Zeltgold app on a phone" style="width:100%;max-width:340px;height:auto;display:block;filter:drop-shadow(0 30px 60px rgba(44,8,18,0.18));animation:filmFloat 7s ease-in-out infinite;">
+      </div>
+    </div>
+  </section>
+
+  <!-- MARIGOLD TORAN GARLAND (mala) -->
+  <div aria-hidden="true" style="position:relative;height:92px;margin-top:-4px;overflow:hidden;">
+    <div style="position:absolute;top:10px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(201,162,75,0.85),rgba(201,162,75,0.85),transparent);"></div>
+    <div style="display:flex;justify-content:center;align-items:flex-start;gap:clamp(8px,2.2vw,26px);flex-wrap:nowrap;">
+      <sc-for list="{{ toranUnits }}" as="u" hint-placeholder-count="9">
+        <div style="display:flex;align-items:flex-start;gap:clamp(6px,1.4vw,14px);flex:0 0 auto;">
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div style="width:2px;height:9px;background:#9c7a2e;"></div>
+            <svg width="24" height="42" style="display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.3));"><use href="#mangoleaf"></use></svg>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div style="width:2px;height:20px;background:#9c7a2e;"></div>
+            <svg width="34" height="34" style="display:block;filter:drop-shadow(0 4px 7px rgba(0,0,0,0.35));"><use href="#marigold"></use></svg>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- 2. ABOUT VINAYAKA (expanded, decorated) -->
+  <section style="position:relative;padding:clamp(56px,8vw,104px) clamp(20px,5vw,64px);background:#f7f2e9;color:#211812;overflow:hidden;">
+    <!-- corner marigold flourishes -->
+    <svg aria-hidden="true" width="220" height="220" style="position:absolute;top:-56px;right:-56px;opacity:0.10;pointer-events:none;"><use href="#marigold"></use></svg>
+    <svg aria-hidden="true" width="170" height="170" style="position:absolute;bottom:-44px;left:-44px;opacity:0.08;pointer-events:none;"><use href="#marigold"></use></svg>
+
+    <div data-reveal style="position:relative;max-width:1180px;margin:0 auto;opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);">
+
+      <!-- portrait + story split -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:clamp(34px,5vw,72px);align-items:center;">
+        <!-- FOUNDER IMAGE -->
+        <div style="position:relative;">
+          <div style="position:relative;aspect-ratio:4/5;border-radius:22px;overflow:hidden;border:1px solid rgba(166,124,43,0.3);box-shadow:0 30px 70px rgba(120,80,20,0.18);">
+            <image-slot id="about-portrait" shape="rect" fit="cover" src="https://images.unsplash.com/photo-1570212773364-e30cd076539e?q=80&w=1400&auto=format&fit=crop" credit="Dollar Gill" credit-href="https://unsplash.com/@dollargill" placeholder="Mr. Mukesh Kumar — Founder, inside the store"></image-slot>
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(20,4,10,0.72) 100%);pointer-events:none;"></div>
+            <div style="position:absolute;left:22px;right:22px;bottom:20px;">
+              <div style="font-size:22px;font-weight:800;color:#fff;line-height:1.1;">Mr. Mukesh Kumar</div>
+              <div style="font-size:12px;letter-spacing:2px;color:#f2d488;font-weight:600;margin-top:6px;">FOUNDER · VINAYAKA JEWELLERS</div>
+            </div>
+          </div>
+          <svg aria-hidden="true" width="58" height="58" style="position:absolute;top:-22px;left:-18px;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.25));"><use href="#marigold"></use></svg>
+          <svg aria-hidden="true" width="46" height="46" style="position:absolute;bottom:-16px;right:-14px;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.25));"><use href="#marigold"></use></svg>
+          <div style="position:absolute;top:18px;right:18px;background:rgba(255,255,255,0.92);border:1px solid rgba(166,124,43,0.35);border-radius:14px;padding:10px 16px;box-shadow:0 10px 24px rgba(120,80,20,0.12);">
+            <div style="font-size:22px;font-weight:800;color:#8a6420;line-height:1;">Since 1992</div>
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(33,24,18,0.55);margin-top:5px;">CHIKKAMAGALURU</div>
+          </div>
+        </div>
+
+        <!-- STORY -->
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:4px;color:#a67c2b;font-weight:700;margin-bottom:14px;"><svg aria-hidden="true" width="24" height="24"><use href="#marigold"></use></svg>OUR JOURNEY</div>
+          <h2 style="font-size:clamp(28px,3.6vw,46px);font-weight:800;letter-spacing:-0.7px;line-height:1.08;text-wrap:pretty;color:#211812;margin-bottom:20px;">About <span style="background:linear-gradient(100deg,#c9a24b,#8a6420);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Vinayaka Jewellers</span></h2>
+          <p style="font-size:18px;line-height:1.75;color:rgba(33,24,18,0.8);text-wrap:pretty;">Founded in 1992 in the heart of Chikkamagaluru by <strong style="color:#211812;font-weight:700;">Mr. Mukesh Kumar</strong>, Vinayaka Jewellers began as a small family showroom with one promise — honest gold, fair prices, and jewellery made to be passed down. Three generations later, that promise still shapes every piece we craft.</p>
+          <p style="margin-top:16px;font-size:17px;line-height:1.72;color:rgba(33,24,18,0.68);text-wrap:pretty;">From temple and antique Lakshmi haarams to bridal Kanjeevaram sets and certified diamonds, our artisans blend age-old South Indian craftsmanship with BIS-hallmarked purity — served, always, like family.</p>
+
+          <!-- hallmark stat strip -->
+          <div style="margin-top:30px;display:flex;flex-wrap:wrap;background:#ffffff;border:1px solid rgba(166,124,43,0.24);border-radius:16px;box-shadow:0 12px 30px rgba(120,80,20,0.08);overflow:hidden;">
+            <div style="flex:1 1 120px;padding:18px 16px;border-right:1px solid rgba(166,124,43,0.18);"><div style="font-size:26px;font-weight:800;color:#8a6420;line-height:1;">1992</div><div style="font-size:12px;color:rgba(33,24,18,0.55);margin-top:6px;">Established</div></div>
+            <div style="flex:1 1 120px;padding:18px 16px;border-right:1px solid rgba(166,124,43,0.18);"><div style="font-size:26px;font-weight:800;color:#8a6420;line-height:1;">3</div><div style="font-size:12px;color:rgba(33,24,18,0.55);margin-top:6px;">Generations</div></div>
+            <div style="flex:1 1 120px;padding:18px 16px;border-right:1px solid rgba(166,124,43,0.18);"><div style="font-size:26px;font-weight:800;color:#8a6420;line-height:1;">15,000+</div><div style="font-size:12px;color:rgba(33,24,18,0.55);margin-top:6px;">Families served</div></div>
+            <div style="flex:1 1 120px;padding:18px 16px;"><div style="font-size:26px;font-weight:800;color:#8a6420;line-height:1;">100%</div><div style="font-size:12px;color:rgba(33,24,18,0.55);margin-top:6px;">BIS hallmarked</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- founder quote — full-width feature -->
+      <div style="margin-top:clamp(34px,4vw,52px);position:relative;background:linear-gradient(135deg,#f5d9d2 0%,#f0c3ba 55%,#e9a99c 100%);border:1px solid rgba(146,53,44,0.25);border-radius:22px;padding:clamp(30px,4vw,48px);box-shadow:0 22px 50px rgba(146,53,44,0.16);overflow:hidden;text-align:center;">
+        <div style="position:absolute;top:-10px;left:24px;font-family:'Cormorant Garamond',serif;font-size:150px;line-height:1;color:rgba(97,10,3,0.12);pointer-events:none;">&ldquo;</div>
+        <p style="position:relative;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:clamp(22px,3vw,34px);color:#5a0f08;line-height:1.4;max-width:760px;margin:0 auto;text-wrap:pretty;">We don't just sell jewellery — we help families mark the moments that matter.</p>
+        <div style="position:relative;margin-top:18px;font-size:13px;color:#7e332c;font-weight:700;letter-spacing:1px;">— MR. MUKESH KUMAR · FOUNDER, VINAYAKA JEWELLERS</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2b. OUR JOURNEY — scroll-pinned horizontal timeline -->
+  <section id="journey" style="background:#4a0802;overflow:hidden;">
+    <div style="max-width:1100px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(20px,5vw,64px) 0;text-align:center;">
+      <div style="font-size:12px;letter-spacing:4px;color:#c9a24b;font-weight:700;margin-bottom:14px;">OUR JOURNEY</div>
+      <h2 style="font-size:clamp(28px,3.6vw,46px);font-weight:800;letter-spacing:-0.5px;line-height:1.1;">Three decades, one promise.</h2>
+      <p style="margin:16px auto 0;font-size:16px;color:rgba(255,255,255,0.62);line-height:1.6;max-width:560px;">Scroll to travel along the milestones that shaped Vinayaka Jewellers.</p>
+    </div>
+    <div class="jr-pin">
+      <div class="jr-track">
+        <div class="jr-line"><div class="jr-fill"></div></div>
+        <div class="jr-item"><div class="jr-content"><div class="jr-card"><div class="jr-index">01</div><div class="jr-chip">THE BEGINNING</div><div class="jr-year">1992</div><div class="jr-title">A family showroom is born</div><div class="jr-desc">Vinayaka Jewellers founded by Mukesh Kumar in Chikkamagaluru.</div></div></div><div class="jr-conn"></div><div class="jr-dot"></div></div>
+        <div class="jr-item"><div class="jr-content"><div class="jr-card"><div class="jr-index">02</div><div class="jr-chip">EARNING TRUST</div><div class="jr-year">1992–2020</div><div class="jr-title">15,000+ families served</div><div class="jr-desc">Built the trust of thousands through purity, transparency, and exceptional craftsmanship.</div></div></div><div class="jr-conn"></div><div class="jr-dot"></div></div>
+        <div class="jr-item"><div class="jr-content"><div class="jr-card"><div class="jr-index">03</div><div class="jr-chip">NEW GENERATION</div><div class="jr-year">2020</div><div class="jr-title">The second generation joins</div><div class="jr-desc">Bringing a modern vision while preserving family values.</div></div></div><div class="jr-conn"></div><div class="jr-dot"></div></div>
+        <div class="jr-item"><div class="jr-content"><div class="jr-card"><div class="jr-index">04</div><div class="jr-chip">TRANSPARENCY</div><div class="jr-year">2023</div><div class="jr-title">Live Carat Meter Testing</div><div class="jr-desc">Introduced in-store to prove gold purity in real time, for every customer.</div></div></div><div class="jr-conn"></div><div class="jr-dot"></div></div>
+        <div class="jr-item"><div class="jr-content"><div class="jr-card"><div class="jr-index">05</div><div class="jr-chip">GOING DIGITAL</div><div class="jr-year">2026</div><div class="jr-title">Partnership with Zeltgold</div><div class="jr-desc">Digital gold savings — Kuber, Samruddhi & JAR Saving, starting from just ₹100.</div></div></div><div class="jr-conn"></div><div class="jr-dot"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. WHY CHOOSE (white) -->
+  <section style="position:relative;padding:clamp(64px,9vw,120px) clamp(20px,5vw,64px);background:#f7f2e9;color:#610a03;overflow:hidden;">
+    <div style="position:absolute;top:-22%;left:50%;transform:translateX(-50%);width:760px;height:760px;background:radial-gradient(circle,rgba(201,162,75,0.16),transparent 62%);filter:blur(20px);pointer-events:none;"></div>
+    <div style="position:relative;max-width:1200px;margin:0 auto;">
+      <div data-reveal style="opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);">
+        <div style="font-size:12px;letter-spacing:4px;color:#a67c2b;font-weight:600;margin-bottom:14px;">WHY CHOOSE US</div>
+        <h2 style="font-size:clamp(26px,3.4vw,44px);font-weight:800;letter-spacing:-0.5px;margin-bottom:10px;color:#610a03;">Why families choose <span style="background:linear-gradient(100deg,#c9a24b,#8a6420);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Vinayaka</span></h2>
+        <p style="color:rgba(44,8,18,0.62);font-size:16px;max-width:560px;">Every reason our customers keep coming back — and bringing their families.</p>
+      </div>
+      <div ref="{{ whyGridRef }}" class="why-grid" style="margin-top:52px;">
+        <sc-for list="{{ whyItems }}" as="w" hint-placeholder-count="6">
+          <div data-why-card style="position:relative;background:#ffffff;border:1px solid rgba(201,162,75,0.22);border-radius:20px;padding:32px 28px 28px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 30px rgba(120,80,20,0.06);cursor:default;">
+            <div data-why-glow style="position:absolute;top:-40%;right:-30%;width:220px;height:220px;background:radial-gradient(circle,rgba(201,162,75,0.28),transparent 70%);opacity:0;pointer-events:none;transition:opacity .45s ease;"></div>
+            <div data-why-index style="position:absolute;top:16px;right:22px;font-size:56px;font-weight:800;line-height:1;color:rgba(201,162,75,0.13);letter-spacing:-2px;pointer-events:none;">{{ w.num }}</div>
+            <div data-why-icon style="width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#f3e6c4,#e6cd8b);display:flex;align-items:center;justify-content:center;color:#8a6420;font-size:24px;font-weight:700;box-shadow:0 10px 22px rgba(201,162,75,0.3);">{{ w.icon }}</div>
+            <div style="margin-top:22px;font-size:19px;font-weight:700;color:#610a03;letter-spacing:-0.2px;">{{ w.title }}</div>
+            <div style="margin-top:9px;font-size:14px;color:rgba(44,8,18,0.62);line-height:1.55;">{{ w.desc }}</div>
+            <div data-why-underline style="margin-top:auto;padding-top:20px;"><span style="display:block;height:3px;width:38px;border-radius:3px;background:linear-gradient(90deg,#e0c179,#c9a24b);"></span></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. TESTIMONIALS (interactive reviewer picker) -->
+  <section id="testi" style="padding:clamp(56px,7vw,100px) clamp(20px,5vw,64px);background:#ffffff;color:#211812;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div data-reveal style="margin-bottom:44px;opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);">
+        <span data-rc style="display:block;width:44px;height:3px;background:#a67c2b;border-radius:2px;margin-bottom:18px;opacity:0;transform:scaleX(0);transform-origin:left;transition:opacity .5s ease,transform .6s cubic-bezier(.16,1,.3,1);"></span>
+        <div data-rc style="display:inline-block;font-size:12px;letter-spacing:4px;color:#7a5713;font-weight:700;margin-bottom:10px;background:rgba(166,124,43,0.14);padding:6px 14px;border-radius:999px;opacity:0;transform:translateY(12px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);">LOVED BY THOUSANDS</div>
+        <h2 data-rc style="font-size:clamp(26px,3.4vw,40px);font-weight:800;letter-spacing:-0.5px;color:#211812;opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);">Trusted by 15,000+ Families</h2>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr);gap:clamp(32px,5vw,72px);align-items:center;">
+        <!-- LEFT: reviewer list along a curved line -->
+        <div data-reveal-rows style="position:relative;">
+          <svg viewBox="0 0 120 400" preserveAspectRatio="none" aria-hidden="true" style="position:absolute;left:22px;top:0;width:60px;height:100%;pointer-events:none;">
+            <path d="M60 6 C 8 120, 8 280, 60 394" fill="none" stroke="rgba(166,124,43,0.42)" stroke-width="1.5" stroke-dasharray="3 5"></path>
+          </svg>
+          <div style="position:relative;display:flex;flex-direction:column;gap:6px;">
+            <sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="6">
+              <button data-rev="{{ $index }}" data-quote="{{ t.quote }}" data-name="{{ t.name }}" data-role="{{ t.role }}" data-rating="{{ t.rating }}" data-date="{{ t.date }}" style="display:flex;align-items:center;gap:16px;background:transparent;border:none;cursor:pointer;font-family:inherit;text-align:left;padding:10px 8px;border-radius:14px;opacity:0;transform:translateX(-22px);transition:background .35s ease,opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);">
+                <span data-av style="width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:2px solid rgba(166,124,43,0.35);box-shadow:0 6px 20px rgba(44,8,18,0.15);transform-origin:center;transition:transform .4s cubic-bezier(.16,1,.3,1),border-color .4s ease;">
+                  <image-slot id="{{ t.slot }}" shape="circle" fit="cover" src="{{ t.avatar }}" credit="{{ t.avatarCredit }}" credit-href="https://unsplash.com" placeholder="Photo"></image-slot>
+                </span>
+                <span style="min-width:0;">
+                  <span data-name-el style="display:block;font-weight:700;font-size:15px;color:rgba(33,24,18,0.55);transition:color .35s ease,font-size .35s ease;">{{ t.name }}</span>
+                  <span data-meta-el style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(33,24,18,0.45);margin-top:3px;"><span style="color:#a67c2b;font-weight:700;">★ {{ t.rating }}</span> · {{ t.date }}</span>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- RIGHT: active quote -->
+        <div data-reveal style="position:relative;padding-left:clamp(0px,2vw,24px);opacity:0;transform:translateY(24px);transition:opacity .9s cubic-bezier(.16,1,.3,1) .1s,transform .9s cubic-bezier(.16,1,.3,1) .1s;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:120px;line-height:0.6;color:rgba(166,124,43,0.5);height:44px;">&ldquo;</div>
+          <p id="testi-quote" style="margin-top:8px;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:clamp(24px,2.8vw,34px);line-height:1.4;color:#211812;text-wrap:pretty;transition:opacity .3s ease,transform .3s cubic-bezier(.16,1,.3,1);"></p>
+          <div id="testi-cap" style="margin-top:26px;font-size:15px;font-weight:600;color:#a67c2b;transition:opacity .3s ease;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. VISIT STORE -->
+  <section id="visit" style="padding:clamp(56px,7vw,96px) clamp(20px,5vw,64px);background:#4a0802;">
+    <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(30px,4vw,56px);">
+      <div>
+        <div style="font-size:12px;letter-spacing:4px;color:#c9a24b;font-weight:600;margin-bottom:18px;">VISIT OUR STORE</div>
+        <h2 style="font-size:clamp(26px,3.4vw,40px);font-weight:800;letter-spacing:-0.5px;">We'd Love to See You</h2>
+        <div style="margin-top:30px;display:flex;flex-direction:column;gap:22px;">
+          <div style="display:flex;gap:14px;"><span style="color:#c9a24b;font-size:18px;">📍</span><div><div style="font-weight:700;font-size:15px;">Address</div><div style="color:rgba(255,255,255,0.7);font-size:15px;line-height:1.5;">Vinayaka Jewellers, Main Road,<br>Chikkamagaluru, Karnataka 577101</div></div></div>
+          <div style="display:flex;gap:14px;"><span style="color:#c9a24b;font-size:18px;">📞</span><div><div style="font-weight:700;font-size:15px;">Phone / WhatsApp</div><div style="color:rgba(255,255,255,0.7);font-size:15px;">+91 00000 00000</div></div></div>
+          <div style="display:flex;gap:14px;"><span style="color:#c9a24b;font-size:18px;">🕘</span><div><div style="font-weight:700;font-size:15px;">Business Hours</div><div style="color:rgba(255,255,255,0.7);font-size:15px;">Mon–Sat · 10:00 AM – 8:30 PM<br>Sunday · 10:30 AM – 2:00 PM</div></div></div>
+          <div style="display:flex;gap:14px;"><span style="color:#c9a24b;font-size:18px;">🅿️</span><div><div style="font-weight:700;font-size:15px;">Parking</div><div style="color:rgba(255,255,255,0.7);font-size:15px;">Free customer parking available</div></div></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:32px;">
+          <a href="#" style="background:#fff;color:#610a03;font-weight:700;font-size:14px;padding:13px 22px;border-radius:999px;">WhatsApp Us</a>
+          <a href="tel:+910000000000" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;font-weight:600;font-size:14px;padding:13px 22px;border-radius:999px;">Call Now</a>
+        </div>
+      </div>
+      <div style="position:relative;min-height:340px;border-radius:20px;overflow:hidden;border:1px solid rgba(201,162,75,0.2);">
+        <image-slot id="home-map" shape="rect" fit="cover" placeholder="Google Map / store location"></image-slot>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. FAQ (white) -->
+  <section style="background:#ffffff;color:#211812;padding:clamp(56px,7vw,96px) clamp(20px,5vw,64px);">
+    <div style="max-width:900px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:48px;">
+      <div style="font-size:12px;letter-spacing:4px;color:#a67c2b;font-weight:600;margin-bottom:14px;">FAQ</div>
+      <h2 style="font-size:clamp(26px,3.4vw,40px);font-weight:800;letter-spacing:-0.5px;color:#211812;">Questions, Answered</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="6">
+        <div onClick="{{ f.toggle }}" style="background:#faf5ec;border:1px solid rgba(166,124,43,0.24);border-radius:14px;padding:22px 24px;cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+            <div style="font-weight:700;font-size:16px;color:#211812;">{{ f.q }}</div>
+            <div style="color:#a67c2b;font-size:22px;font-weight:300;flex-shrink:0;">{{ f.sign }}</div>
+          </div>
+          <sc-if value="{{ f.open }}" hint-placeholder-val="{{ false }}">
+            <p style="margin-top:14px;color:rgba(33,24,18,0.68);font-size:15px;line-height:1.6;">{{ f.a }}</p>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    </div>
+  </section>
+
+  <!-- 12. FINAL CTA -->
+  <section style="position:relative;padding:clamp(70px,10vw,140px) clamp(20px,5vw,64px);text-align:center;overflow:hidden;">
+    <div style="position:absolute;inset:0;"><image-slot id="home-final" shape="rect" fit="cover" src="https://images.unsplash.com/photo-1641699862936-be9f49b1c38d?q=80&w=1400&auto=format&fit=crop" credit="Bella Pon Fruitsia" credit-href="https://unsplash.com/@bfruitsia" placeholder="Closing banner imagery"></image-slot></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,4,10,0.9) 0%,rgba(20,4,10,0.66) 45%,rgba(20,4,10,0.42) 100%);pointer-events:none;"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(201,162,75,0.18),transparent 60%);pointer-events:none;"></div>
+    <div style="position:relative;max-width:760px;margin:0 auto;">
+      <div style="font-size:12px;letter-spacing:4px;color:#c9a24b;font-weight:600;margin-bottom:18px;">MADE TO BE PASSED DOWN</div>
+      <h2 style="font-size:clamp(30px,4.6vw,56px);font-weight:800;letter-spacing:-1px;line-height:1.05;">Your Dream Jewellery Awaits</h2>
+      <p style="margin:20px auto 0;font-size:clamp(16px,1.7vw,19px);color:rgba(255,255,255,0.82);line-height:1.55;max-width:540px;">Visit our Chikkamagaluru showroom or message us on WhatsApp — our team will help you find the perfect piece for every occasion.</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:36px;">
+        <a href="#visit" style="background:#fff;color:#610a03;font-weight:700;font-size:15px;padding:16px 30px;border-radius:999px;box-shadow:0 12px 30px rgba(0,0,0,0.35);">Visit Store</a>
+        <a href="tel:+910000000000" style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.55);color:#fff;font-weight:600;font-size:15px;padding:16px 30px;border-radius:999px;backdrop-filter:blur(4px);">📞 Call Now</a>
+        <a href="#" style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.55);color:#fff;font-weight:600;font-size:15px;padding:16px 30px;border-radius:999px;backdrop-filter:blur(4px);">💬 WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="background:#160309;padding:clamp(48px,6vw,72px) clamp(20px,5vw,64px) 40px;border-top:1px solid rgba(201,162,75,0.16);">
+    <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:40px;">
+      <div>
+        <div style="font-weight:800;font-size:20px;letter-spacing:3px;">VINAYAKA</div>
+        <div style="font-weight:500;font-size:10px;letter-spacing:6px;color:#c9a24b;margin-top:3px;">JEWELLERS</div>
+        <p style="margin-top:18px;color:rgba(255,255,255,0.55);font-size:14px;line-height:1.6;max-width:240px;">Finest gold, diamond &amp; silver jewellery in Chikkamagaluru. A ZedGold company.</p>
+      </div>
+      <div><div style="font-weight:700;font-size:14px;margin-bottom:16px;">Explore</div><div style="display:flex;flex-direction:column;gap:10px;font-size:14px;"><a href="Gallery.dc.html" style="color:rgba(255,255,255,0.6);">Collections</a><a href="#schemes" style="color:rgba(255,255,255,0.6);">Schemes</a><a href="Gallery.dc.html" style="color:rgba(255,255,255,0.6);">Gallery</a></div></div>
+      <div><div style="font-weight:700;font-size:14px;margin-bottom:16px;">Connect</div><div style="display:flex;flex-direction:column;gap:10px;font-size:14px;"><a href="#visit" style="color:rgba(255,255,255,0.6);">Contact</a><a href="FAQ - Light.dc.html" style="color:rgba(255,255,255,0.6);">FAQ</a><a href="#" style="color:rgba(255,255,255,0.6);">WhatsApp</a><a href="Terms - Light.dc.html" style="color:rgba(255,255,255,0.6);">Terms</a></div></div>
+      <div><div style="font-weight:700;font-size:14px;margin-bottom:16px;">Visit</div><div style="color:rgba(255,255,255,0.6);font-size:14px;line-height:1.7;">Main Road, Chikkamagaluru,<br>Karnataka 577101<br>+91 00000 00000</div></div>
+    </div>
+    <div style="max-width:1200px;margin:40px auto 0;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:13px;">© 1992–2026 Vinayaka Jewellers · A subsidiary of ZedGold. All rights reserved.</div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { openFaq: 0 };
+  rootRef = React.createRef();
+  whyGridRef = React.createRef();
+  schemeTabsRef = React.createRef();
+  schemeStageRef = React.createRef();
+
+  componentDidMount() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const q = (s) => Array.from(document.querySelectorAll(s));
+
+    // ---- Scroll-triggered reveal with staggered micro-interactions ----
+    // Each element animates in as it enters the viewport; staggered children
+    // (data-rc) and reviewer rows cascade. A hard fallback guarantees nothing
+    // stays hidden if IntersectionObserver misbehaves in this runtime.
+    const revealEl = (el) => {
+      if (el._revd) return; el._revd = true;
+      el.style.opacity = '1'; el.style.transform = 'none';
+      // staggered inner children
+      el.querySelectorAll('[data-rc]').forEach((k, i) => setTimeout(() => {
+        k.style.opacity = '1';
+        k.style.transform = k.style.transform && k.style.transform.indexOf('scaleX') > -1 ? 'scaleX(1)' : 'none';
+      }, reduce ? 0 : 90 + i * 110));
+      // testimonial reviewer rows cascade in
+      if (el.hasAttribute('data-reveal-rows')) {
+        const rows = el.querySelectorAll('[data-rev]');
+        rows.forEach((r, i) => setTimeout(() => { r.style.opacity = '1'; r.style.transform = 'none'; }, reduce ? 0 : 120 + i * 90));
+      }
+    };
+    const targets = () => q('[data-reveal],[data-reveal-rows]');
+    let io = null;
+    if (!reduce && 'IntersectionObserver' in window) {
+      io = new IntersectionObserver((ents) => {
+        ents.forEach(en => { if (en.isIntersecting) { revealEl(en.target); io.unobserve(en.target); } });
+      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    }
+    const wireReveal = () => targets().forEach(el => {
+      if (el._revWired) return; el._revWired = true;
+      if (io) {
+        // already-in-view (above the fold) elements: reveal immediately
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight * 0.92) revealEl(el); else io.observe(el);
+      } else { revealEl(el); }
+    });
+    wireReveal();
+    // catch elements added by streaming sc-for re-renders
+    setTimeout(wireReveal, 200);
+    setTimeout(wireReveal, 700);
+    // hard safety net — never leave anything hidden
+    setTimeout(() => targets().forEach(revealEl), 3500);
+
+    // ---- Gold-scheme crossfade ----
+    const setScheme = (i) => {
+      if (i === this._schemeActive) return;
+      this._schemeActive = i;
+      const tabs = q('#schemes [data-tab]');
+      const panels = q('#schemes [data-panel]');
+      const dots = q('#schemes [data-prog]');
+      const hl = document.querySelector('#schemes [data-tab-hl]');
+      if (!tabs.length || !panels.length) return;
+      tabs.forEach((t, idx) => {
+        const on = idx === i;
+        t.style.color = on ? '#f7e6b8' : 'rgba(255,255,255,0.6)';
+        const tick = t.querySelector('[data-tick]');
+        const check = t.querySelector('[data-check]');
+        if (tick) { tick.style.background = on ? '#c9a24b' : 'transparent'; tick.style.borderColor = on ? '#c9a24b' : 'rgba(201,162,75,0.5)'; }
+        if (check) check.style.strokeDashoffset = on ? '0' : '15';
+      });
+      panels.forEach((p, idx) => {
+        const on = idx === i;
+        p.style.opacity = on ? '1' : '0';
+        p.style.transform = on ? 'none' : 'translateY(24px)';
+        p.style.pointerEvents = on ? 'auto' : 'none';
+      });
+      dots.forEach((d, idx) => { d.style.background = idx === i ? '#c9a24b' : 'rgba(201,162,75,0.25)'; });
+      if (hl && tabs[i]) { hl.style.width = tabs[i].offsetWidth + 'px'; hl.style.transform = 'translateX(' + tabs[i].offsetLeft + 'px)'; }
+    };
+    this._schemeActive = -1;
+    setScheme(0);
+    setTimeout(() => { this._schemeActive = -1; setScheme(0); }, 300);
+
+    // Scroll-driven: the section is a tall sticky-scroll container; map how far the
+    // user has scrolled through it to the active scheme (Kuber → Samruddhi → JAR),
+    // then the page keeps scrolling normally past the last one.
+    const SCHEME_N = 3;
+    // Drive the active scheme with ScrollTrigger (the mechanism proven to work in
+    // this runtime — raw scroll events and rAF are unreliable here). CSS sticky
+    // handles the pinning; ST just maps scroll progress to the scheme index.
+    const startSchemeST = () => {
+      if (!(window.gsap && window.ScrollTrigger)) { this._schWait = setTimeout(startSchemeST, 60); return; }
+      const ScrollTrigger = window.ScrollTrigger;
+      const el = document.querySelector('#schemes .sch-scroll');
+      if (!el) { this._schWait = setTimeout(startSchemeST, 60); return; }
+      const apply = self => setScheme(Math.min(SCHEME_N - 1, Math.floor(self.progress * SCHEME_N)));
+      this._schemeST = ScrollTrigger.create({
+        trigger: el, start: 'top top', end: 'bottom bottom',
+        onUpdate: apply, onRefresh: apply,
+        snap: { snapTo: [1/6, 0.5, 5/6], duration: { min: 0.2, max: 0.5 }, delay: 0.08, ease: 'power2.inOut' }
+      });
+      setTimeout(() => ScrollTrigger.refresh(), 400);
+      setTimeout(() => ScrollTrigger.refresh(), 1200);
+    };
+    startSchemeST();
+
+    // Tab click: scroll to that scheme's segment so scroll + tabs stay in sync.
+    this._onClick = (e) => {
+      const btn = e.target && e.target.closest && e.target.closest('#schemes [data-tab]');
+      if (!btn) return;
+      const schScroll = document.querySelector('#schemes .sch-scroll');
+      const tabs = q('#schemes [data-tab]');
+      const i = tabs.indexOf(btn);
+      if (i < 0 || !schScroll) return;
+      const rect = schScroll.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      const targetTop = window.scrollY + rect.top + (i / (SCHEME_N - 1)) * total + 4;
+      window.scrollTo({ top: targetTop, behavior: 'smooth' });
+    };
+    document.addEventListener('click', this._onClick);
+
+    // ---- Interactive reviewer picker ----
+    const getRevs = () => q('#testi [data-rev]');
+    const setRev = (i) => {
+      const revs = getRevs();
+      if (i === this._revActive || !revs.length) return;
+      this._revActive = i;
+      revs.forEach((r, idx) => {
+        const on = idx === i;
+        r.style.background = on ? '#610a03' : 'transparent';
+        const av = r.querySelector('[data-av]');
+        const nameEl = r.querySelector('[data-name-el]');
+        const metaEl = r.querySelector('[data-meta-el]');
+        if (av) { av.style.transform = on ? 'scale(1.36)' : 'scale(1)'; av.style.borderColor = on ? '#c9a24b' : 'rgba(166,124,43,0.35)'; }
+        if (nameEl) { nameEl.style.color = on ? '#ffffff' : 'rgba(33,24,18,0.55)'; nameEl.style.fontSize = on ? '17px' : '15px'; }
+        if (metaEl) { metaEl.style.color = on ? 'rgba(255,255,255,0.7)' : 'rgba(33,24,18,0.45)'; }
+      });
+      const el = revs[i];
+      const quoteEl = document.querySelector('#testi-quote');
+      const capEl = document.querySelector('#testi-cap');
+      if (el && quoteEl) {
+        quoteEl.style.opacity = '0'; quoteEl.style.transform = 'translateY(10px)';
+        if (capEl) capEl.style.opacity = '0';
+        clearTimeout(this._revFade);
+        this._revFade = setTimeout(() => {
+          quoteEl.textContent = el.dataset.quote || '';
+          if (capEl) capEl.textContent = '— ' + (el.dataset.name || '') + '  ·  ★ ' + (el.dataset.rating || '') + '  ·  ' + (el.dataset.date || '');
+          quoteEl.style.opacity = '1'; quoteEl.style.transform = 'none';
+          if (capEl) capEl.style.opacity = '1';
+        }, reduce ? 0 : 260);
+      }
+    };
+    this._revActive = -1;
+    // Rows come from an async sc-for — retry until they exist, then lock in panel 0.
+    let revTries = 0;
+    const initRev = () => {
+      if (getRevs().length) { this._revActive = -1; setRev(0); return; }
+      if (revTries++ < 40) setTimeout(initRev, 80);
+    };
+    initRev();
+    const startRevAuto = () => {
+      if (reduce || this._revTimer) return;
+      this._revTimer = setInterval(() => {
+        const n = getRevs().length; if (!n) return;
+        setRev((this._revActive + 1) % n);
+      }, 4600);
+    };
+    startRevAuto();
+    this._onRevClick = (e) => {
+      const btn = e.target && e.target.closest && e.target.closest('#testi [data-rev]');
+      if (!btn) return;
+      if (this._revTimer) { clearInterval(this._revTimer); this._revTimer = null; }
+      setRev(getRevs().indexOf(btn));
+    };
+    document.addEventListener('click', this._onRevClick);
+
+    // ---- Reel carousel arrows ----
+    const scrollReel = (dir) => { const row = document.getElementById('reelRow'); if (row) row.scrollBy({ left: dir * row.clientWidth * 0.8, behavior: 'smooth' }); };
+    this._onReelNav = (e) => {
+      if (!e.target || !e.target.closest) return;
+      if (e.target.closest('[data-reel-prev]')) scrollReel(-1);
+      else if (e.target.closest('[data-reel-next]')) scrollReel(1);
+    };
+    document.addEventListener('click', this._onReelNav);
+
+    // ---- Brand film: reveal video only once it actually loads (poster stays if blocked) ----
+    const fv = document.getElementById('filmVideo');
+    if (fv) {
+      fv.muted = true; fv.defaultMuted = true; fv.volume = 0;
+      const keepPlaying = () => { const p = fv.play(); if (p && p.catch) p.catch(() => {}); };
+      fv.addEventListener('loadeddata', () => { fv.muted = true; fv.style.opacity = '1'; const badge = document.querySelector('[data-film-play]'); if (badge) badge.style.opacity = '0'; keepPlaying(); });
+      fv.addEventListener('pause', keepPlaying);
+      fv.addEventListener('ended', () => { fv.currentTime = 0; keepPlaying(); });
+      keepPlaying();
+    }
+
+    // ---- HERO: seamless GSAP marquee + ambient expand/hold/return cycle ----
+    const startHero = () => {
+      if (!(window.gsap && window.Flip)) { this._heroWait = setTimeout(startHero, 60); return; }
+      const gsap = window.gsap, Flip = window.Flip;
+      gsap.registerPlugin(Flip);
+      const heroEl = document.getElementById('hero');
+      const track = heroEl && heroEl.querySelector('.photo-track');
+      const inners = heroEl ? Array.from(heroEl.querySelectorAll('.photo-slot')) : [];
+      if (!track || inners.length < 10) { this._heroWait = setTimeout(startHero, 60); return; }
+      // continuous, linear, seamless (track holds the 5-photo set duplicated once)
+      this._marquee = gsap.to(track, { xPercent: -50, ease: 'none', duration: 32, repeat: -1 });
+      if (reduce) { this._marquee.pause(); return; }
+
+      const pickCentered = () => {
+        const hc = heroEl.getBoundingClientRect(), cx = hc.left + hc.width / 2;
+        let best = inners[0], bd = Infinity;
+        inners.forEach(el => { const r = el.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - cx); if (d < bd) { bd = d; best = el; } });
+        return best;
+      };
+      const expand = (el, done) => {
+        const home = el.parentNode;
+        this._marquee.pause();
+        const s = Flip.getState(el);
+        heroEl.appendChild(el);
+        el.style.position = 'absolute'; el.style.inset = '0';
+        el.classList.add('is-expanded');
+        Flip.from(s, { duration: 0.75, ease: 'power2.inOut', absolute: true, onComplete: () => {
+          this._hold = gsap.delayedCall(5, () => {
+            const rs = Flip.getState(el);
+            home.appendChild(el);
+            el.classList.remove('is-expanded');
+            el.style.position = 'absolute'; el.style.inset = '0';
+            Flip.from(rs, { duration: 0.75, ease: 'power2.inOut', absolute: true, onComplete: () => { this._marquee.resume(); done && done(); } });
+          });
+        } });
+      };
+      const cycle = () => { expand(pickCentered(), () => { this._heroCycle = setTimeout(cycle, 3000); }); };
+      this._heroCycle = setTimeout(cycle, 4000);
+    };
+    startHero();
+
+    // ---- OUR JOURNEY: scroll-pinned horizontal timeline ----
+    const startJourney = () => {
+      if (!(window.gsap && window.ScrollTrigger)) { this._jrWait = setTimeout(startJourney, 60); return; }
+      const gsap = window.gsap, ScrollTrigger = window.ScrollTrigger;
+      gsap.registerPlugin(ScrollTrigger);
+      const sec = document.getElementById('journey');
+      const pin = sec && sec.querySelector('.jr-pin');
+      const track = sec && sec.querySelector('.jr-track');
+      const fill = sec && sec.querySelector('.jr-fill');
+      if (!sec || !pin || !track || !fill) { this._jrWait = setTimeout(startJourney, 60); return; }
+      const dots = Array.from(sec.querySelectorAll('.jr-dot'));
+      const contents = Array.from(sec.querySelectorAll('.jr-content'));
+      const mm = gsap.matchMedia();
+      this._journeyMM = mm;
+
+      // DESKTOP: pin the section, translate the track horizontally, fill the line,
+      // pop each dot in as the horizontal scroll reaches it (same containerAnimation).
+      mm.add('(min-width: 821px)', () => {
+        const dist = () => Math.max(1, track.scrollWidth - window.innerWidth);
+        const horiz = gsap.to(track, { x: () => -dist(), ease: 'none',
+          scrollTrigger: { trigger: pin, start: 'top top', end: () => '+=' + dist(), scrub: 1, pin: true, anticipatePin: 1, invalidateOnRefresh: true } });
+        gsap.fromTo(fill, { scaleX: 0 }, { scaleX: 1, ease: 'none',
+          scrollTrigger: { trigger: pin, start: 'top top', end: () => '+=' + dist(), scrub: 1, invalidateOnRefresh: true } });
+        dots.forEach((d, i) => {
+          gsap.set(d, { scale: 0, opacity: 0, transformOrigin: 'center' });
+          gsap.set(contents[i], { opacity: 0, y: 24 });
+          gsap.to(d, { scale: 1, opacity: 1, ease: 'back.out(2)', duration: 0.5,
+            scrollTrigger: { trigger: d, containerAnimation: horiz, start: 'left 78%', toggleActions: 'play none none reverse' } });
+          gsap.to(contents[i], { opacity: 1, y: 0, ease: 'power2.out', duration: 0.5,
+            scrollTrigger: { trigger: d, containerAnimation: horiz, start: 'left 78%', toggleActions: 'play none none reverse' } });
+        });
+        return () => { gsap.set([track], { clearProps: 'transform' }); };
+      });
+
+      // MOBILE: vertical layout — scroll-reveal each milestone, line fills top-to-bottom.
+      mm.add('(max-width: 820px)', () => {
+        gsap.fromTo(fill, { scaleY: 0 }, { scaleY: 1, ease: 'none',
+          scrollTrigger: { trigger: sec, start: 'top 75%', end: 'bottom 65%', scrub: 1, invalidateOnRefresh: true } });
+        const items = Array.from(sec.querySelectorAll('.jr-item'));
+        items.forEach(it => {
+          gsap.from(it, { opacity: 0, y: 34, duration: 0.6, ease: 'power2.out',
+            scrollTrigger: { trigger: it, start: 'top 85%', toggleActions: 'play none none reverse' } });
+        });
+      });
+
+      setTimeout(() => ScrollTrigger.refresh(), 400);
+      setTimeout(() => ScrollTrigger.refresh(), 1200);
+    };
+    startJourney();
+
+    // ---- WHY CHOOSE: GSAP staggered spring entrance + hover micro-interactions ----
+    const startWhy = () => {
+      if (!(window.gsap)) { this._whyWait = setTimeout(startWhy, 60); return; }
+      const gsap = window.gsap;
+      const cards = q('[data-why-card]');
+      if (!cards.length) { this._whyWait = setTimeout(startWhy, 60); return; }
+      const iconOf = c => c.querySelector('[data-why-icon]');
+      const glowOf = c => c.querySelector('[data-why-glow]');
+      const barOf = c => c.querySelector('[data-why-underline] span');
+
+      // Entrance animates FROM 0 → cards stay visible if this never runs (no hidden bug).
+      this._whyPlayed = reduce;
+      this._playWhyIn = () => {
+        if (this._whyPlayed) return; this._whyPlayed = true;
+        gsap.from(cards, { opacity: 0, y: 46, duration: 0.7, ease: 'power3.out', stagger: 0.1 });
+        cards.forEach((c, i) => gsap.from(iconOf(c), { scale: 0.4, rotate: -20, opacity: 0, duration: 0.6, ease: 'back.out(2)', delay: 0.12 + i * 0.1 }));
+      };
+      if (window.ScrollTrigger) {
+        window.ScrollTrigger.create({ trigger: cards[0].closest('section'), start: 'top 80%', once: true, onEnter: this._playWhyIn });
+        setTimeout(() => window.ScrollTrigger.refresh(), 450);
+      } else {
+        setTimeout(this._playWhyIn, 300);
+      }
+
+      // hover micro-interactions
+      this._whyHandlers = [];
+      cards.forEach(c => {
+        const icon = iconOf(c), glow = glowOf(c), bar = barOf(c);
+        const enter = () => {
+          gsap.to(c, { y: -8, duration: 0.35, ease: 'power2.out', boxShadow: '0 28px 60px rgba(120,80,20,0.18)' });
+          gsap.to(icon, { scale: 1.14, rotate: 6, duration: 0.45, ease: 'back.out(2.5)' });
+          if (glow) glow.style.opacity = '1';
+          if (bar) gsap.to(bar, { width: 68, duration: 0.4, ease: 'power2.out' });
+        };
+        const leave = () => {
+          gsap.to(c, { y: 0, duration: 0.4, ease: 'power2.out', boxShadow: '0 10px 30px rgba(120,80,20,0.06)' });
+          gsap.to(icon, { scale: 1, rotate: 0, duration: 0.45, ease: 'power2.out' });
+          if (glow) glow.style.opacity = '0';
+          if (bar) gsap.to(bar, { width: 38, duration: 0.4, ease: 'power2.out' });
+        };
+        c.addEventListener('mouseenter', enter);
+        c.addEventListener('mouseleave', leave);
+        this._whyHandlers.push([c, enter, leave]);
+      });
+    };
+    startWhy();
+  }
+
+  componentWillUnmount() {
+    if (this._schemeTimer) { clearInterval(this._schemeTimer); this._schemeTimer = null; }
+    if (this._schWait) { clearTimeout(this._schWait); this._schWait = null; }
+    if (this._schemeST && this._schemeST.kill) this._schemeST.kill();
+    if (this._revTimer) { clearInterval(this._revTimer); this._revTimer = null; }
+    if (this._heroWait) { clearTimeout(this._heroWait); this._heroWait = null; }
+    if (this._heroCycle) { clearTimeout(this._heroCycle); this._heroCycle = null; }
+    if (this._jrWait) { clearTimeout(this._jrWait); this._jrWait = null; }
+    if (this._whyWait) { clearTimeout(this._whyWait); this._whyWait = null; }
+    if (this._whyHandlers) { this._whyHandlers.forEach(([c, en, lv]) => { c.removeEventListener('mouseenter', en); c.removeEventListener('mouseleave', lv); }); this._whyHandlers = null; }
+    if (this._journeyMM && this._journeyMM.revert) this._journeyMM.revert();
+    if (this._hold && this._hold.kill) this._hold.kill();
+    if (this._marquee && this._marquee.kill) this._marquee.kill();
+    if (this._onClick) document.removeEventListener('click', this._onClick);
+    if (this._onRevClick) document.removeEventListener('click', this._onRevClick);
+    if (this._onReelNav) document.removeEventListener('click', this._onReelNav);
+  }
+
+  renderVals() {
+    const toranUnits = Array.from({ length: 9 }, (_, i) => ({ i }));
+    const whyItems = [
+      { icon: '✓', title: 'BIS Hallmarked Jewellery', desc: 'Every gold piece certified for purity by the Bureau of Indian Standards.' },
+      { icon: '◆', title: 'Certified Diamonds', desc: 'Independently graded and certified diamonds you can trust.' },
+      { icon: '♥', title: 'Trusted by Thousands', desc: 'Over 15,000 families served across three generations.' },
+      { icon: '✦', title: 'Temple & Antique Expertise', desc: 'Authentic South Indian temple, Lakshmi & antique craftsmanship.' },
+      { icon: '₹', title: 'Easy Gold Saving Schemes', desc: 'Flexible plans that make owning gold effortless.' },
+      { icon: '✎', title: 'Custom Jewellery Orders', desc: 'Bring your vision — our artisans bring it to life.' },
+    ].map((w, i) => ({ ...w, num: '0' + (i + 1) }));
+    const collections = [
+      'Temple Jewellery','Bridal Kanjeevaram Sets','Antique Lakshmi Haaram','Kasu Malai (Coin Necklace)','Vaddanam (Waist Belt)','Jhumkas & Chandbalis','Diamond Jewellery','Men\u2019s Collection','Silver Articles & Coins'
+    ].map((name, i) => ({ name, slot: 'home-col-' + i }));
+    const testimonials = [
+      { quote: 'Been buying from Vinayaka for over 20 years. The trust and transparency is why my whole family shops here.', name: 'Lakshmi Rao', role: 'Chikkamagaluru', rating: '5.0', date: 'Aug 2024' },
+      { quote: 'My bridal set was everything I dreamed of. The team guided us patiently through every choice.', name: 'Ananya Shetty', role: 'Bride, 2025', rating: '4.9', date: 'Feb 2025' },
+      { quote: 'The Live Carat Meter gave me total confidence. No other shop in town offers this.', name: 'Ramesh Gowda', role: 'Regular customer', rating: '5.0', date: 'Jun 2024' },
+      { quote: 'Started the Samruddhi scheme two years ago — bought my daughter\u2019s jewellery stress-free.', name: 'Suma Prakash', role: 'Scheme member', rating: '4.8', date: 'Nov 2023' },
+      { quote: 'Genuine hallmarked gold and honest pricing. They explain everything, never rush you.', name: 'Venkatesh N.', role: 'Chikkamagaluru', rating: '5.0', date: 'Mar 2025' },
+      { quote: 'Beautiful antique designs you won\u2019t find anywhere else. A true legacy store.', name: 'Deepa Hegde', role: 'Loyal customer', rating: '4.9', date: 'Jan 2025' },
+    ].map((t, i) => ({ ...t, slot: 'home-testi-' + i, avatar: ['https://images.unsplash.com/photo-1727430228383-aa1fb59db8bf','https://images.unsplash.com/photo-1617627143750-d86bc21e42bb','https://images.unsplash.com/photo-1600685890506-593fdf55949b','https://images.unsplash.com/photo-1652374968229-a66a1c170c04','https://images.unsplash.com/photo-1587271598589-3f91d0872f66','https://images.unsplash.com/photo-1641699862936-be9f49b1c38d'][i] + '?q=80&w=200&h=200&auto=format&fit=crop&crop=faces', avatarCredit: ['shades by 43','Sabesh Photography LTD','Aayush Rawat','Ardy Arjun','AMISH THAKKAR','Bella Pon Fruitsia'][i] }));
+    const reelPhotos = [['photo-1551854716-8b811be39e7e','Bella Pon Fruitsia','bfruitsia','flagged/'],['photo-1727430228383-aa1fb59db8bf','shades by 43','shades_by_43',''],['photo-1688382654723-a7366006519b','Ardy Arjun','ardyastic',''],['photo-1594140700783-f9e70c7abc25','Dollar Gill','dollargill',''],['photo-1570212773364-e30cd076539e','Dollar Gill','dollargill','']]; const reels = reelPhotos.map((p, i) => ({ slot: 'home-reel-' + i, src: 'https://images.unsplash.com/' + p[3] + p[0] + '?q=80&w=800&auto=format&fit=crop', creditName: p[1], creditHref: 'https://unsplash.com/@' + p[2] }));
+    const faqData = [
+      { q: 'Do you provide BIS Hallmarked jewellery?', a: 'Yes. All our gold jewellery is BIS Hallmarked, guaranteeing certified purity on every single piece.' },
+      { q: 'Can I exchange old gold?', a: 'Absolutely. We offer transparent old-gold exchange with fair, real-time valuation using our Live Carat Meter.' },
+      { q: 'Do you have EMI or saving schemes?', a: 'Yes — the Samruddhi Gold Weight Saving scheme, Kuber Bonus Month, and JAR Saving from \u20b9100 via Zeltgold.' },
+      { q: 'Are custom orders accepted?', a: 'Certainly. Share your design or idea and our in-house artisans will craft it for you.' },
+      { q: 'Do you sell coins and bars?', a: 'Yes, we stock certified gold and silver coins and bars in a range of weights.' },
+      { q: 'Is parking available?', a: 'Yes, free customer parking is available right at our showroom.' },
+    ];
+    const faqs = faqData.map((f, i) => ({
+      ...f,
+      open: this.state.openFaq === i,
+      sign: this.state.openFaq === i ? '\u2212' : '+',
+      toggle: () => this.setState(s => ({ openFaq: s.openFaq === i ? -1 : i })),
+    }));
+    return { whyItems, collections, testimonials, reels, faqs, toranUnits, rootRef: this.rootRef, whyGridRef: this.whyGridRef, schemeTabsRef: this.schemeTabsRef, schemeTrackRef: this.schemeTrackRef, schemeStageRef: this.schemeStageRef };
+  }
+}
+</script>
+</body>
+</html>

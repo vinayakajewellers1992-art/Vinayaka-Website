@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Draggable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Observer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/InertiaPlugin.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Manrope',system-ui,sans-serif;background:#ffffff;color:#1a1a1a;overflow:hidden;-webkit-font-smoothing:antialiased;}
+  a{color:#a8842f;text-decoration:none;}
+  a:hover{color:#c9a24b;}
+  ::selection{background:#c9a24b;color:#fff;}
+  .gallery-photo img{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none;border-radius:2px;}
+</style>
+</helmet>
+<div class="gallery-viewport" ref="{{ viewportRef }}" style="position:fixed;inset:0;overflow:hidden;background:#ffffff;cursor:grab;touch-action:none;">
+
+  <div class="gallery-canvas" ref="{{ canvasRef }}" style="{{ canvasStyle }}">
+    <sc-for list="{{ photos }}" as="p" hint-placeholder-count="0">
+      <div class="gallery-photo" data-idx="{{ p.i }}" style="{{ p.wrap }}background:#fff;padding:{{ matPx }}px;border-radius:3px;box-shadow:0 6px 20px rgba(0,0,0,0.13);cursor:pointer;transition:box-shadow .3s ease;">
+        <img src="{{ p.src }}" alt="" loading="lazy" decoding="async">
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<header style="position:fixed;top:40px;left:clamp(16px,4vw,48px);right:clamp(16px,4vw,48px);z-index:90;display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 24px;background:rgba(74,8,2,0.34);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border:1px solid rgba(255,255,255,0.18);border-radius:999px;box-shadow:0 18px 50px rgba(20,3,7,0.4);transform:translateZ(0);">
+    <a href="Home.dc.html" style="display:flex;align-items:center;">
+      <img src="assets/logo-vinayaka.png" alt="Vinayaka Jewellers" style="height:40px;width:auto;display:block;">
+    </a>
+    <nav style="display:flex;align-items:center;gap:clamp(14px,2.5vw,34px);">
+      <a href="Home.dc.html" style="color:rgba(255,255,255,0.72);font-size:14px;font-weight:500;letter-spacing:0.5px;">Home</a>
+      <a href="Gallery.dc.html" style="color:#fff;font-size:14px;font-weight:600;letter-spacing:0.5px;">Gallery</a>
+    </nav>
+  </header>
+
+  <div style="position:fixed;right:22px;bottom:24px;z-index:80;display:flex;flex-direction:column;gap:9px;transform:translateZ(0);">
+    <button onClick="{{ zoomIn }}" aria-label="Zoom in" style="width:46px;height:46px;border-radius:13px;border:1px solid rgba(74,8,2,0.14);background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.13);display:flex;align-items:center;justify-content:center;" style-hover="background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a0802" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+    <button onClick="{{ zoomOut }}" aria-label="Zoom out" style="width:46px;height:46px;border-radius:13px;border:1px solid rgba(74,8,2,0.14);background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.13);display:flex;align-items:center;justify-content:center;" style-hover="background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a0802" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"></path></svg></button>
+    <button onClick="{{ zoomReset }}" aria-label="Reset view" style="width:46px;height:46px;border-radius:13px;border:1px solid rgba(74,8,2,0.14);background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.13);display:flex;align-items:center;justify-content:center;" style-hover="background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.2)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a0802" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+  </div>
+
+  <div class="gallery-hint" style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateZ(0);z-index:75;display:flex;align-items:center;gap:9px;padding:10px 18px;background:rgba(44,8,18,0.9);color:#fff;border-radius:999px;font-size:13px;font-weight:500;letter-spacing:0.3px;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,0.22);transition:opacity .6s ease;">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#e6c374" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M8.5 6.5 12 3l3.5 3.5M8.5 17.5 12 21l3.5-3.5M6.5 8.5 3 12l3.5 3.5M17.5 8.5 21 12l-3.5 3.5"></path></svg>
+    Drag to explore photos
+  </div>
+
+  <sc-if value="{{ lightboxOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeLightbox }}" style="position:fixed;inset:0;z-index:120;transform:translateZ(0);background:rgba(22,5,11,0.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,72px);">
+      <button onClick="{{ closeLightbox }}" style="position:absolute;top:22px;right:26px;background:transparent;border:none;color:#fff;font-size:38px;line-height:1;cursor:pointer;font-weight:200;">×</button>
+      <button onClick="{{ prevPhoto }}" style="position:absolute;left:18px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;width:54px;height:54px;border-radius:50%;font-size:26px;cursor:pointer;">‹</button>
+      <div style="max-width:min(560px,92vw);text-align:center;" onClick="{{ stop }}">
+        <img src="{{ activeSrc }}" alt="" style="display:block;width:100%;height:auto;max-height:84vh;object-fit:contain;border-radius:6px;background:#fff;padding:6px;box-shadow:0 30px 90px rgba(0,0,0,0.55);">
+        <div style="margin-top:16px;font-size:13px;font-weight:500;letter-spacing:2px;color:rgba(255,255,255,0.7);">{{ counter }}</div>
+      </div>
+      <button onClick="{{ nextPhoto }}" style="position:absolute;right:18px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;width:54px;height:54px;border-radius:50%;font-size:26px;cursor:pointer;">›</button>
+    </div>
+  </sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;showGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;bgColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#ffffff&quot;,&quot;options&quot;:[&quot;#ffffff&quot;,&quot;#f7f2e9&quot;,&quot;#f3ede3&quot;,&quot;#0e0e10&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;matWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:7,&quot;min&quot;:0,&quot;max&quot;:16,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Photos&quot;}}">
+class Component extends DCLogic {
+  state = { lightbox: -1 };
+  viewportRef = React.createRef();
+  canvasRef = React.createRef();
+
+  nums() {
+    return [238500,238516,238522,238525,238534,238537,238541,238546,238553,238558,238568,238582,238585,238593,238606,238610,238613,238619,238625,238633,238644,238649,238658,238663,238672,238675,238681,238684,238698,238702,238708,238711,238715,238717,238720,238723,238727,238730,238738,238747,238751,238752,238757,238761,238764,238766,238771,238774,238775,238777,238780,238783,238784,238785,238793,238798,238801,238805,238808,238811,238816,238817,238819,238822,238828,238837,238846,238850,238855,238858,238861,238865,238870,238873,238877,238879,238882,238888,238891,238892,238900,238902,238909,238912,238918,238921,238924,238933,238940,238945,238949,238963,238969,238975,238993,238997,239002,239006,239009,239012,239014,239018,239024,239027,239035,239041,239050,239056,239059,239065,239080];
+  }
+
+  layout() {
+    if (this._layout) return this._layout;
+    const cols = 13, cellW = 340, cellH = 505, pad = 140, minW = 198, maxW = 280;
+    const nums = this.nums();
+    const mk = (seed) => { let t = seed >>> 0; return () => { t += 0x6D2B79F5; let x = t; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
+    const photos = nums.map((n, i) => {
+      const r = mk(i * 97 + 17);
+      const col = i % cols, row = Math.floor(i / cols);
+      const w = Math.round(minW + r() * (maxW - minW));
+      const jx = Math.round(r() * 52 - 26), jy = Math.round(r() * 60 - 30);
+      const rot = (r() * 12 - 6).toFixed(2);
+      const stagger = (row % 2) ? 72 : 0;
+      const left = pad + col * cellW + stagger + jx;
+      const top = pad + row * cellH + jy;
+      return { i, src: 'uploads/SM' + n + '.jpg', wrap: `position:absolute;left:${left}px;top:${top}px;width:${w}px;transform:rotate(${rot}deg);transform-origin:center center;will-change:transform;` };
+    });
+    const rows = Math.ceil(nums.length / cols);
+    this._layout = { photos, canvasW: pad * 2 + cols * cellW, canvasH: pad * 2 + rows * cellH };
+    return this._layout;
+  }
+
+  renderVals() {
+    const L = this.layout();
+    const n = L.photos.length;
+    const grid = this.props.showGrid ?? true;
+    const bg = this.props.bgColor ?? '#ffffff';
+    const gridCss = grid ? 'background-image:radial-gradient(circle, rgba(17,17,17,0.16) 1.3px, transparent 1.3px);background-size:28px 28px;' : '';
+    const lb = this.state.lightbox;
+    const open = lb >= 0 && lb < n;
+    const move = (d) => this.setState(s => ({ lightbox: (s.lightbox + d + n) % n }));
+    return {
+      photos: L.photos,
+      matPx: this.props.matWidth ?? 7,
+      canvasStyle: `position:absolute;top:0;left:0;z-index:0;width:${L.canvasW}px;height:${L.canvasH}px;background-color:${bg};${gridCss}will-change:transform;`,
+      viewportRef: this.viewportRef,
+      canvasRef: this.canvasRef,
+      lightboxOpen: open,
+      activeSrc: open ? L.photos[lb].src : '',
+      counter: open ? (lb + 1) + ' / ' + n : '',
+      closeLightbox: () => this.setState({ lightbox: -1 }),
+      nextPhoto: (e) => { if (e) e.stopPropagation(); move(1); },
+      prevPhoto: (e) => { if (e) e.stopPropagation(); move(-1); },
+      stop: (e) => { if (e) e.stopPropagation(); },
+      zoomIn: () => this._zoom(1.25),
+      zoomOut: () => this._zoom(0.8),
+      zoomReset: () => this._resetView(),
+    };
+  }
+
+  componentDidMount() { this._boot(); }
+
+  _boot() {
+    let tries = 0;
+    const wait = () => {
+      if (window.gsap && window.Draggable && window.Observer) {
+        this._armReady = true;
+        this._ensure();
+        this._heal = [250, 700, 1500, 3000].map(t => setTimeout(() => this._ensure(), t));
+        return;
+      }
+      if (tries++ > 250) return;
+      setTimeout(wait, 40);
+    };
+    wait();
+  }
+
+  componentDidUpdate() { if (this._armReady) this._ensure(); }
+
+  _clampX(x) {
+    const vp = this.viewportRef.current, c = this.canvasRef.current;
+    if (!vp || !c) return x;
+    const min = Math.min(0, vp.clientWidth - c.offsetWidth * (this._scale || 1));
+    return Math.max(min, Math.min(0, x));
+  }
+  _clampY(y) {
+    const vp = this.viewportRef.current, c = this.canvasRef.current;
+    if (!vp || !c) return y;
+    const min = Math.min(0, vp.clientHeight - c.offsetHeight * (this._scale || 1));
+    return Math.max(min, Math.min(0, y));
+  }
+  _zoom(factor, px, py) {
+    const gsap = window.gsap, vp = this.viewportRef.current, canvas = this.canvasRef.current;
+    if (!gsap || !vp || !canvas) return;
+    const s0 = this._scale || 1;
+    const s1 = Math.min(2.4, Math.max(0.5, +(s0 * factor).toFixed(3)));
+    if (s1 === s0) return;
+    const cx = (px == null ? vp.clientWidth / 2 : px);
+    const cy = (py == null ? vp.clientHeight / 2 : py);
+    const x0 = gsap.getProperty(canvas, 'x'), y0 = gsap.getProperty(canvas, 'y');
+    this._scale = s1;
+    const x1 = this._clampX(cx - (cx - x0) * (s1 / s0));
+    const y1 = this._clampY(cy - (cy - y0) * (s1 / s0));
+    gsap.to(canvas, { scale: s1, x: x1, y: y1, duration: 0.3, ease: 'power2.out', overwrite: true, onComplete: () => { if (this._drag) { this._drag.update(true); this._drag.applyBounds(vp); } } });
+  }
+  _resetView() {
+    const gsap = window.gsap, vp = this.viewportRef.current, canvas = this.canvasRef.current;
+    if (!gsap || !vp || !canvas) return;
+    this._scale = 1;
+    const x = this._clampX((vp.clientWidth - canvas.offsetWidth) / 2);
+    const y = this._clampY((vp.clientHeight - canvas.offsetHeight) / 2);
+    gsap.to(canvas, { scale: 1, x, y, duration: 0.4, ease: 'power2.out', overwrite: true, onComplete: () => { if (this._drag) { this._drag.update(true); this._drag.applyBounds(vp); } } });
+  }
+
+  _ensure() {
+    const gsap = window.gsap;
+    if (!gsap || !window.Draggable) return;
+    const vp = this.viewportRef.current, canvas = this.canvasRef.current;
+    if (!vp || !canvas) return;
+    gsap.registerPlugin(window.Draggable);
+    if (window.InertiaPlugin) gsap.registerPlugin(window.InertiaPlugin);
+    if (this._scale == null) this._scale = 1;
+    const self = this;
+    const hideHint = () => { const h = vp.querySelector('.gallery-hint'); if (h) h.style.opacity = '0'; };
+
+    if (canvas.__galArmed !== true) {
+      canvas.__galArmed = true;
+      gsap.set(canvas, { transformOrigin: '0 0' });
+      const CW = canvas.offsetWidth, CH = canvas.offsetHeight;
+      gsap.set(canvas, { x: this._clampX((vp.clientWidth - CW) / 2), y: this._clampY((vp.clientHeight - CH) / 2) });
+
+      canvas.querySelectorAll('.gallery-photo').forEach(el => {
+        el.addEventListener('mouseenter', () => { el.style.zIndex = 40; el.style.boxShadow = '0 26px 60px rgba(0,0,0,0.30)'; gsap.to(el, { scale: 1.08, duration: 0.3, ease: 'power2.out' }); });
+        el.addEventListener('mouseleave', () => { el.style.boxShadow = '0 6px 20px rgba(0,0,0,0.13)'; gsap.to(el, { scale: 1, duration: 0.3, ease: 'power2.out', onComplete: () => { el.style.zIndex = ''; } }); });
+      });
+
+      canvas.addEventListener('click', (e) => {
+        if (self._moved) return;
+        const ph = e.target.closest('.gallery-photo');
+        if (!ph) return;
+        const idx = parseInt(ph.getAttribute('data-idx'), 10);
+        if (!isNaN(idx)) self.setState({ lightbox: idx });
+      });
+
+      vp.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          const r = vp.getBoundingClientRect();
+          self._zoom(e.deltaY < 0 ? 1.15 : 0.87, e.clientX - r.left, e.clientY - r.top);
+        } else {
+          hideHint();
+          const k = 1.7;
+          const nx = self._clampX(gsap.getProperty(canvas, 'x') - e.deltaX * k);
+          const ny = self._clampY(gsap.getProperty(canvas, 'y') - e.deltaY * k);
+          gsap.to(canvas, { x: nx, y: ny, duration: 0.35, ease: 'power3.out', overwrite: true, onComplete: () => { if (self._drag) self._drag.update(); } });
+        }
+      }, { passive: false });
+
+      setTimeout(hideHint, 5000);
+
+      this._onResize = () => { gsap.set(canvas, { x: this._clampX(gsap.getProperty(canvas, 'x')), y: this._clampY(gsap.getProperty(canvas, 'y')) }); if (this._drag) this._drag.applyBounds(vp); };
+      window.addEventListener('resize', this._onResize);
+
+      this._onKey = (e) => {
+        if (this.state.lightbox >= 0) {
+          if (e.key === 'Escape') this.setState({ lightbox: -1 });
+          else if (e.key === 'ArrowRight') this.setState(s => ({ lightbox: (s.lightbox + 1) % this.layout().photos.length }));
+          else if (e.key === 'ArrowLeft') this.setState(s => ({ lightbox: (s.lightbox - 1 + this.layout().photos.length) % this.layout().photos.length }));
+          return;
+        }
+        if (e.key === '+' || e.key === '=') this._zoom(1.25);
+        else if (e.key === '-' || e.key === '_') this._zoom(0.8);
+        else if (e.key === '0') this._resetView();
+      };
+      window.addEventListener('keydown', this._onKey);
+    }
+
+    if (!window.Draggable.get(canvas)) {
+      this._drag = window.Draggable.create(canvas, {
+        type: 'x,y', inertia: !!window.InertiaPlugin, bounds: vp, edgeResistance: 0.85, dragClickables: true, allowContextMenu: true,
+        onPress() { self._sx = this.x; self._sy = this.y; self._moved = false; vp.style.cursor = 'grabbing'; },
+        onDrag() { if (Math.abs(this.x - self._sx) > 4 || Math.abs(this.y - self._sy) > 4) { self._moved = true; hideHint(); } },
+        onRelease() { vp.style.cursor = 'grab'; },
+      })[0];
+    }
+  }
+
+  componentWillUnmount() {
+    if (this._heal) this._heal.forEach(clearTimeout);
+    if (this._obs) { this._obs.kill(); this._obs = null; }
+    const canvas = this.canvasRef.current;
+    if (canvas && window.Draggable) { const d = window.Draggable.get(canvas); if (d) d.kill(); }
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onKey) window.removeEventListener('keydown', this._onKey);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Manrope', system-ui, sans-serif; background: #610a03; color: #ffffff; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: #d8b563; text-decoration: none; }
+  a:hover { color: #ecc97a; }
+  ::selection { background: #c9a24b; color: #610a03; }
+  @keyframes vjRise { from { opacity: 0; transform: translateY(38px); } to { opacity: 1; transform: none; } }
+  @keyframes vjShimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .vj-shim { background: linear-gradient(100deg, #c9a24b 20%, #f7e3a8 46%, #c9a24b 72%); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: vjShimmer 5s linear infinite; }
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="position:relative;background:#610a03;min-height:100vh;overflow:hidden;">
+
+  <div style="position:fixed;top:-24%;left:50%;transform:translateX(-50%);width:min(1100px,120vw);height:900px;z-index:0;pointer-events:none;background:radial-gradient(circle,rgba(242,212,136,0.15),transparent 62%);filter:blur(10px);"></div>
+  <div style="position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 0%,transparent 58%,rgba(22,3,9,0.66) 100%);"></div>
+
+  <!-- NAV (glass pill · homepage style) -->
+  <header style="position:fixed;top:40px;left:clamp(16px,4vw,48px);right:clamp(16px,4vw,48px);z-index:90;display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 24px;background:rgba(74,8,2,0.34);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border:1px solid rgba(255,255,255,0.18);border-radius:999px;box-shadow:0 18px 50px rgba(20,3,7,0.4);">
+    <a href="Home.dc.html" style="display:flex;align-items:center;">
+      <img src="assets/logo-vinayaka.png" alt="Vinayaka Jewellers" style="height:40px;width:auto;display:block;">
+    </a>
+    <nav style="display:flex;align-items:center;gap:clamp(14px,2.5vw,34px);">
+      <a href="Home.dc.html" style="color:rgba(255,255,255,0.72);font-size:14px;font-weight:500;letter-spacing:0.5px;">Home</a>
+      <a href="Gallery.dc.html" style="color:rgba(255,255,255,0.72);font-size:14px;font-weight:500;letter-spacing:0.5px;">Gallery</a>
+      <a href="Terms - Light.dc.html" style="color:rgba(255,255,255,0.72);font-size:14px;font-weight:500;letter-spacing:0.5px;">Terms</a>
+    </nav>
+  </header>
+
+  <!-- PAGE HEAD -->
+  <section style="position:relative;z-index:2;padding:clamp(150px,16vw,212px) clamp(20px,5vw,72px) clamp(30px,4vw,54px);max-width:1000px;margin:0 auto;">
+    <div style="font-size:12px;letter-spacing:5px;color:#c9a24b;font-weight:600;overflow:hidden;"><span style="display:inline-block;animation:vjRise .8s cubic-bezier(.16,1,.3,1) both;">SUPPORT · SINCE 1992</span></div>
+    <h1 style="margin-top:18px;font-size:clamp(40px,7vw,88px);font-weight:200;letter-spacing:-2.5px;line-height:0.96;overflow:hidden;">
+      <span style="display:inline-block;animation:vjRise .9s cubic-bezier(.16,1,.3,1) .08s both;">Frequently asked</span><br>
+      <span class="vj-shim" style="display:inline-block;font-weight:700;animation:vjRise .9s cubic-bezier(.16,1,.3,1) .2s both;">questions.</span>
+    </h1>
+    <p style="margin-top:26px;max-width:520px;font-size:clamp(15px,1.7vw,18px);font-weight:300;color:rgba(255,255,255,0.72);line-height:1.6;animation:vjRise .9s cubic-bezier(.16,1,.3,1) .32s both;">Everything you might want to know before you visit our showroom on M.G. Road, Chikkamagaluru. Still curious? We're a message away.</p>
+  </section>
+
+  <!-- ACCORDION -->
+  <section style="position:relative;z-index:2;padding:0 clamp(20px,5vw,72px) clamp(40px,6vw,90px);max-width:1000px;margin:0 auto;">
+    <div style="display:flex;flex-direction:column;border-top:1px solid rgba(242,212,136,0.2);">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="8">
+        <div data-reveal style="opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);border-bottom:1px solid rgba(242,212,136,0.2);">
+          <button onClick="{{ f.toggle }}" style="width:100%;display:flex;align-items:center;gap:24px;padding:clamp(22px,2.6vw,30px) 4px;background:transparent;border:none;color:#ffffff;font-family:inherit;text-align:left;cursor:pointer;">
+            <span style="font-size:13px;font-weight:600;color:#c9a24b;min-width:34px;font-variant-numeric:tabular-nums;">{{ f.num }}</span>
+            <span style="flex:1;font-size:clamp(17px,2vw,22px);font-weight:400;letter-spacing:-0.3px;line-height:1.3;">{{ f.q }}</span>
+            <span style="font-size:26px;font-weight:200;color:#c9a24b;transition:transform .35s cubic-bezier(.16,1,.3,1);transform:{{ f.iconRot }};line-height:1;">+</span>
+          </button>
+          <div style="max-height:{{ f.maxH }};overflow:hidden;transition:max-height .5s cubic-bezier(.16,1,.3,1);">
+            <div style="padding:0 4px clamp(24px,2.8vw,32px) 58px;max-width:720px;font-size:clamp(15px,1.6vw,17px);font-weight:300;line-height:1.7;color:rgba(255,255,255,0.7);">
+              <p>{{ f.a }}</p>
+              <sc-if value="{{ f.hasBullets }}" hint-placeholder-val="{{ false }}">
+                <ul style="margin:14px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px;">
+                  <sc-for list="{{ f.bullets }}" as="b" hint-placeholder-count="3">
+                    <li style="color:#c9a24b;font-weight:400;"><span style="color:rgba(255,255,255,0.7);font-weight:300;">{{ b }}</span></li>
+                  </sc-for>
+                </ul>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- STILL HAVE QUESTIONS -->
+  <section style="position:relative;z-index:2;padding:clamp(40px,6vw,80px) clamp(20px,5vw,72px) clamp(70px,9vw,120px);max-width:1000px;margin:0 auto;">
+    <div data-reveal style="opacity:0;transform:translateY(24px);transition:all .8s cubic-bezier(.16,1,.3,1);background:linear-gradient(160deg,rgba(97,10,3,0.72),rgba(22,3,9,0.82));border:1px solid rgba(242,212,136,0.26);border-radius:20px;padding:clamp(30px,4vw,52px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;box-shadow:0 30px 70px rgba(0,0,0,0.42);">
+      <div>
+        <h2 style="font-size:clamp(24px,3vw,38px);font-weight:200;letter-spacing:-1px;color:#ffffff;">Still have a <span class="vj-shim" style="font-weight:700;">question?</span></h2>
+        <p style="margin-top:12px;max-width:420px;font-size:15px;font-weight:300;color:rgba(255,255,255,0.7);line-height:1.6;">Call, WhatsApp, or walk into our showroom opposite Allen Solly, M.G. Road, Chikkamagaluru.</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;">
+        <a data-magnetic href="#" style="display:inline-block;background:#c9a24b;color:#2c0812;font-weight:700;font-size:14px;padding:14px 26px;border-radius:999px;transition:transform .25s ease;">WhatsApp Us</a>
+        <a data-magnetic href="tel:+910000000000" style="display:inline-block;background:transparent;border:1px solid rgba(255,255,255,0.32);color:#ffffff;font-weight:600;font-size:14px;padding:14px 26px;border-radius:999px;transition:transform .25s ease;">Call Showroom</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="position:relative;z-index:2;background:#160309;padding:clamp(48px,6vw,72px) clamp(20px,5vw,64px) 40px;border-top:1px solid rgba(201,162,75,0.16);">
+    <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:40px;">
+      <div>
+        <div style="font-weight:800;font-size:20px;letter-spacing:3px;color:#ffffff;">VINAYAKA</div>
+        <div style="font-weight:500;font-size:10px;letter-spacing:6px;color:#c9a24b;margin-top:3px;">JEWELLERS</div>
+        <p style="margin-top:18px;color:rgba(255,255,255,0.55);font-size:14px;line-height:1.6;max-width:240px;">Finest gold, diamond &amp; silver jewellery in Chikkamagaluru. A ZedGold company.</p>
+      </div>
+      <div><div style="font-weight:700;font-size:14px;margin-bottom:16px;color:#ffffff;">Explore</div><div style="display:flex;flex-direction:column;gap:10px;font-size:14px;"><a href="Gallery.dc.html" style="color:rgba(255,255,255,0.6);">Collections</a><a href="Home.dc.html#schemes" style="color:rgba(255,255,255,0.6);">Schemes</a><a href="Gallery.dc.html" style="color:rgba(255,255,255,0.6);">Gallery</a></div></div>
+      <div><div style="font-weight:700;font-size:14px;margin-bottom:16px;color:#ffffff;">Connect</div><div style="display:flex;flex-direction:column;gap:10px;font-size:14px;"><a href="Home.dc.html#visit" style="color:rgba(255,255,255,0.6);">Contact</a><a href="FAQ - Light.dc.html" style="color:#c9a24b;">FAQ</a><a href="#" style="color:rgba(255,255,255,0.6);">WhatsApp</a><a href="Terms - Light.dc.html" style="color:rgba(255,255,255,0.6);">Terms</a></div></div>
+      <div><div style="font-weight:700;font-size:14px;margin-bottom:16px;color:#ffffff;">Visit</div><div style="color:rgba(255,255,255,0.6);font-size:14px;line-height:1.7;">Main Road, Chikkamagaluru,<br>Karnataka 577101<br>+91 00000 00000</div></div>
+    </div>
+    <div style="max-width:1200px;margin:40px auto 0;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:13px;">© 1992–2026 Vinayaka Jewellers · A subsidiary of ZedGold. All rights reserved.</div>
+  </footer>
+
+  <a data-magnetic href="#" style="position:fixed;right:22px;bottom:22px;z-index:110;display:flex;align-items:center;gap:10px;background:#25D366;color:#0a2e17;font-weight:700;font-size:14px;padding:13px 20px;border-radius:999px;box-shadow:0 12px 34px rgba(0,0,0,0.3);transition:transform .25s ease;">💬 WhatsApp</a>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  state = { open: null };
+
+  componentDidMount() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const root = this.rootRef.current;
+    if (!root) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        e.target.style.opacity = '1'; e.target.style.transform = 'none';
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.18 });
+    root.querySelectorAll('[data-reveal]').forEach(el => {
+      if (reduce) { el.style.opacity = '1'; el.style.transform = 'none'; } else io.observe(el);
+    });
+    if (!reduce && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      root.querySelectorAll('[data-magnetic]').forEach(btn => {
+        btn.addEventListener('mousemove', (ev) => {
+          const r = btn.getBoundingClientRect();
+          const x = ev.clientX - r.left - r.width / 2, y = ev.clientY - r.top - r.height / 2;
+          btn.style.transform = 'translate(' + x * 0.3 + 'px,' + y * 0.4 + 'px)';
+        });
+        btn.addEventListener('mouseleave', () => { btn.style.transform = 'translate(0,0)'; });
+      });
+    }
+  }
+
+  renderVals() {
+    const data = [
+      { q: 'When was Vinayaka Jewellers established?', a: 'Vinayaka Jewellers was established in 1992 with a commitment to purity, transparency, and exceptional customer service.' },
+      { q: 'Where is your showroom located?', a: 'Vinayaka Jewellers — M.G. Road, opposite Allen Solly, Chikkamagaluru, Karnataka.' },
+      { q: 'Is all your jewellery BIS Hallmarked?', a: 'Yes. All eligible gold jewellery sold by Vinayaka Jewellers is BIS Hallmarked, ensuring authenticity and purity.' },
+      { q: 'Do you provide certified diamond jewellery?', a: 'Yes. We offer certified diamond jewellery with quality assurance.' },
+      { q: 'Can I check the purity of my old gold?', a: 'Yes. We provide Live Carat Meter Testing, allowing you to verify the purity of your gold transparently, right at our counter.' },
+      { q: 'Do you accept old gold exchange?', a: 'Yes. You can exchange eligible old gold, subject to quality and purity evaluation at the showroom.' },
+      { q: 'Do you make customised jewellery?', a: 'Yes. We undertake customised jewellery orders based on your preferences and feasibility.' },
+      { q: 'What investment schemes do you offer?', a: 'We currently offer three:', bullets: ['Kuber Bonus Month Scheme', 'Samruddhi Gold Weight Saving Scheme', 'JAR Saving through our partnership with Zeltgold, starting from just ₹100.'] },
+      { q: 'What is JAR Saving?', a: 'JAR Saving lets you start investing in gold weight from just ₹100, with flexible contributions through Zeltgold.' },
+      { q: 'Can I join your schemes online?', a: 'Yes. Eligible schemes can be joined digitally through our Zeltgold partnership.' },
+      { q: 'Do you sell gold and silver coins?', a: 'Yes. We offer a range of gold and silver coins and bars, subject to availability.' },
+      { q: 'What payment methods do you accept?', a: 'We accept cash (as per applicable regulations), UPI, debit cards, credit cards, bank transfers, and other approved payment methods.' },
+      { q: 'Do you provide jewellery cleaning or polishing?', a: 'Yes. Cleaning and polishing services are available for eligible jewellery.' },
+      { q: 'What are your business hours?', a: 'Please contact us or visit our Google Business Profile for our latest showroom timings.' },
+      { q: 'How can I contact Vinayaka Jewellers?', a: 'You can call us, visit our showroom, or connect with us through our social media pages and WhatsApp.' },
+    ];
+
+    const faqs = data.map((d, i) => {
+      const isOpen = this.state.open === i;
+      return {
+        q: d.q,
+        a: d.a,
+        bullets: d.bullets || [],
+        hasBullets: !!(d.bullets && d.bullets.length),
+        num: String(i + 1).padStart(2, '0'),
+        maxH: isOpen ? '600px' : '0px',
+        iconRot: isOpen ? 'rotate(135deg)' : 'rotate(0deg)',
+        toggle: () => this.setState(s => ({ open: s.open === i ? null : i })),
+      };
+    });
+    return { faqs, rootRef: this.rootRef };
+  }
+}
+</script>
+</body>
+</html>
